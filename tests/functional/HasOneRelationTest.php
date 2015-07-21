@@ -3,6 +3,7 @@
 use Mockery as M;
 use Vinelab\NeoEloquent\Tests\TestCase;
 use Vinelab\NeoEloquent\Eloquent\Model;
+use Vinelab\NeoEloquent\Eloquent\SoftDeletes;
 
 class User extends Model {
 
@@ -18,8 +19,34 @@ class User extends Model {
 class Profile extends Model {
 
     protected $label = 'Profile';
-
     protected $fillable = ['guid', 'service'];
+
+}
+
+class UserSoftDelete extends Model
+{
+
+    use SoftDeletes;
+
+    protected $dates = ['deleted_at'];
+    protected $label = 'Individual';
+    protected $fillable = ['name', 'email'];
+
+    public function profile()
+    {
+        return $this->hasOne('Vinelab\NeoEloquent\Tests\Functional\Relations\HasOne\ProfileSoftDelete', 'PROFILE');
+    }
+}
+
+class ProfileSoftDelete extends Model
+{
+
+    use SoftDeletes;
+
+    protected $dates = ['deleted_at'];
+    protected $label = 'Profile';
+    protected $fillable = ['guid', 'service'];
+
 }
 
 class HasOneRelationTest extends TestCase {
@@ -107,7 +134,7 @@ class HasOneRelationTest extends TestCase {
         $saved = User::find($user->id);
         $this->assertEquals($profile, $saved->profile);
 
-     // delete the relation and make sure it was deleted
+        // delete the relation and make sure it was deleted
         // so that we can delete the nodes when cleaning up.
         $this->assertTrue($relation->delete());
     }
@@ -168,4 +195,32 @@ class HasOneRelationTest extends TestCase {
         $this->assertTrue($relation->delete());
     }
 
+    public function testSoftDeletingModelWithRelated() {
+        $user = UserSoftDelete::create(['name' => 'Tests', 'email' => 'B']);
+        $profile = ProfileSoftDelete::create(['guid' => uniqid(), 'service' => 'twitter']);
+
+        $relation = $user->profile()->save($profile);
+        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut', $relation);
+
+        $this->assertInstanceOf('Carbon\Carbon', $relation->created_at, 'make sure we set the created_at timestamp');
+        $this->assertInstanceOf('Carbon\Carbon', $relation->updated_at, 'make sure we set the updated_at timestamp');
+        $this->assertEquals($user->profile, $profile);
+
+        // Let's retrieve it to make sure that NeoEloquent is not lying about it.
+        $saved = UserSoftDelete::find($user->id);
+        $this->assertEquals($profile, $saved->profile);
+
+        $savedProfile = $user->profile;
+        $savedProfile->delete();
+        $this->assertFalse($savedProfile->exists);
+        $this->assertInstanceOf('Carbon\Carbon', $savedProfile->deleted_at);
+
+        $shouldBeNull = $user->profile;
+        print get_class($shouldBeNull);
+        $this->assertNull($shouldBeNull);
+
+        // delete the relation and make sure it was deleted
+        // so that we can delete the nodes when cleaning up.
+        $this->assertTrue($relation->delete());
+    }
 }
