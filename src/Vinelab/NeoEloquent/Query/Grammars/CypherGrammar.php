@@ -154,8 +154,7 @@ class CypherGrammar extends Grammar {
         // so we will have to turn it into something like id(node)
         $property = $property == 'id' ? 'id('. $parent['node'] .')' : $parent['node'] .'.'. $property;
 
-        return '('. $parent['node'] . $parentLabels .'), '
-                . $this->craftRelation($parent['node'], $relationshipLabel, $related['node'], $relatedLabels, $direction);
+        return $this->craftRelation($parent['node'], $parentLabels, $relationshipLabel, $related['node'], $relatedLabels, $direction);
     }
 
     /**
@@ -180,8 +179,7 @@ class CypherGrammar extends Grammar {
         // so we will have to turn it into something like id(node)
         $property = $property == 'id' ? 'id('. $parent['node'] .')' : $parent['node'] .'.'. $property;
 
-        return '('. $parent['node'] . $parentLabels .'), '
-                . $this->craftRelation($parent['node'], 'r', $relatedNode, '', $direction);
+        return $this->craftRelation($parent['node'], $parentLabels, 'r', $relatedNode, '', $direction);
     }
 
     /**
@@ -206,7 +204,7 @@ class CypherGrammar extends Grammar {
      * @param  string $direction     Where is it going?
      * @return string
      */
-    public function craftRelation($parentNode, $relationLabel, $relatedNode, $relatedLabels, $direction, $bare = false)
+    public function craftRelation($parentNode, $parentLabels, $relationLabel, $relatedNode, $relatedLabels, $direction, $bare = false)
     {
         switch($direction)
         {
@@ -224,8 +222,8 @@ class CypherGrammar extends Grammar {
             break;
         }
 
-        return ($bare) ? sprintf($relation, $parentNode, $relationLabel, $relatedNode)
-            : sprintf($relation, $parentNode, $relationLabel, '('. $relatedNode.$relatedLabels .')');
+        return ($bare) ? sprintf($relation, $parentNode.$parentLabels, $relationLabel, $relatedNode)
+            : sprintf($relation, $parentNode.$parentLabels, $relationLabel, '('. $relatedNode.$relatedLabels .')');
     }
 
 
