@@ -767,7 +767,7 @@ class Builder extends IlluminateQueryBuilder {
      */
     public function addBinding($value, $type = 'where')
     {
-        if (is_array($value))
+        if (is_array($value) && count($value) > 0)
         {
             $key = array_keys($value)[0];
 
