@@ -154,8 +154,7 @@ class CypherGrammar extends Grammar {
         // so we will have to turn it into something like id(node)
         $property = $property == 'id' ? 'id('. $parent['node'] .')' : $parent['node'] .'.'. $property;
 
-        return '('. $parent['node'] . $parentLabels .'), '
-                . $this->craftRelation($parent['node'], $relationshipLabel, $related['node'], $relatedLabels, $direction);
+        return $this->craftRelation($parent['node'], $parentLabels, $relationshipLabel, $related['node'], $relatedLabels, $direction);
     }
 
     /**
@@ -180,8 +179,7 @@ class CypherGrammar extends Grammar {
         // so we will have to turn it into something like id(node)
         $property = $property == 'id' ? 'id('. $parent['node'] .')' : $parent['node'] .'.'. $property;
 
-        return '('. $parent['node'] . $parentLabels .'), '
-                . $this->craftRelation($parent['node'], 'r', $relatedNode, '', $direction);
+        return $this->craftRelation($parent['node'], $parentLabels, 'r', $relatedNode, '', $direction);
     }
 
     /**
@@ -206,7 +204,7 @@ class CypherGrammar extends Grammar {
      * @param  string $direction     Where is it going?
      * @return string
      */
-    public function craftRelation($parentNode, $relationLabel, $relatedNode, $relatedLabels, $direction, $bare = false)
+    public function craftRelation($parentNode, $parentLabels, $relationLabel, $relatedNode, $relatedLabels, $direction, $bare = false)
     {
         switch($direction)
         {
@@ -225,7 +223,7 @@ class CypherGrammar extends Grammar {
         }
 
         return ($bare) ? sprintf($relation, $parentNode, $relationLabel, $relatedNode)
-            : sprintf($relation, $parentNode, $relationLabel, '('. $relatedNode.$relatedLabels .')');
+            : sprintf($relation, $parentNode.$parentLabels, $relationLabel, '('. $relatedNode.$relatedLabels .')');
     }
 
 
@@ -539,6 +537,7 @@ class CypherGrammar extends Grammar {
         ], $identifier);
 
         $parentNode = $this->modelAsNode($model['label']);
+        $parentLabels = $model['label'];
 
         // Prepare the related models as entities for the query.
         $relations = [];
@@ -570,6 +569,7 @@ class CypherGrammar extends Grammar {
                 // get a relation cypher.
                 $relations[] = $this->craftRelation(
                     $parentNode,
+                    $parentLabels,
                     ':'. $relation['type'],
                     $this->prepareEntity(compact('label', 'bindings'), $identifier),
                     $this->modelAsNode($label),
@@ -597,6 +597,7 @@ class CypherGrammar extends Grammar {
                 $attachments['wheres'][]  = "id($identifier) IN [". implode(', ', $attach) .']';
                 $attachments['relations'][] = $this->craftRelation(
                     $parentNode,
+                    $parentLabels,
                     ':'. $relation['type'],
                     "($identifier)",
                     $nodeLabel,
