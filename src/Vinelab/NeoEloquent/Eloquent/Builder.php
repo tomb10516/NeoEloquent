@@ -418,6 +418,13 @@ class Builder extends IlluminateBuilder {
         return $this;
     }
 
+        public function matchEarly($query)
+    {
+            $this->query->matchEarly($query);
+
+        return $this;
+    }
+    
     /**
      * Add an OUTGOING "->" relationship MATCH to the query.
      *
@@ -678,6 +685,11 @@ class Builder extends IlluminateBuilder {
 
         $parentNode = $relation->getParentNode();
         $relatedNode = $relation->getRelatedNode();
+        
+        // do early match here
+        $this->prefixWheres($query, $prefix);
+        $this->matchEarly($query);
+        
         // Tell the query to select our parent node only.
         $this->select($parentNode);
         // Set the relationship match clause.
@@ -692,7 +704,7 @@ class Builder extends IlluminateBuilder {
 
         // Prefix all the columns with the relation's node placeholder in the query
         // and merge the queries that needs to be merged.
-        $this->prefixAndMerge($query, $prefix);
+//        $this->prefixAndMerge($query, $prefix);
 
         /**
          * After that we've done everything we need with the Has() and related we need

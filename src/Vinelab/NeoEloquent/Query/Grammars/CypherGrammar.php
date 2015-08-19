@@ -117,15 +117,35 @@ class CypherGrammar extends Grammar {
     {
         if ( ! is_array($matches) || empty($matches)) return '';
 
-        $prepared = array();
+//        $prepared = array();
 
+        $retval = "";
         foreach ($matches as $match)
         {
             $method = 'prepareMatch'. ucfirst($match['type']);
-            $prepared[] = $this->$method($match);
+            $prepared = $this->$method($match);
+            $retval .= "MATCH " . $prepared . ' ';
         }
 
-        return "MATCH " . implode(', ', $prepared);
+        return $retval;
+    }
+    
+    public function prepareMatchEarly(array $match) {
+        $node = $match['node'];
+        $labels = $this->prepareLabels($match['labels']);
+        $property = $match['property'];
+
+        $q = $match['query'];
+        
+        $compwheres = $this->compileWheres($q);
+        
+        $matchStatement = '(%s%s) ';
+        
+        $retVal =  sprintf($matchStatement, $node, $labels) . $compwheres;
+        
+        return $retVal;
+        
+        
     }
 
     /**
