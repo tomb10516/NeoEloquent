@@ -82,6 +82,25 @@ class Builder extends IlluminateQueryBuilder {
 
         $this->client = $connection->getClient();
     }
+    
+        /**
+     * Add an "order by" clause to the query.
+     *
+     * @param  string  $column
+     * @param  string  $direction
+     * @return $this
+     */
+    public function orderByRelation($column, $direction = 'asc')
+    {
+        $relation = $this->getHasRelationQuery($column);
+        
+        
+        $direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';
+
+        $this->{$property}[] = compact('column', 'direction');
+
+        return $this;
+    }
 
     /**
 	 * Set the node's label which the query is targeting.
@@ -594,6 +613,14 @@ class Builder extends IlluminateQueryBuilder {
         $relatedLabels = $related->getTable();
         $parentNode    = $this->modelAsNode($parentLabels);
 
+        foreach ($this->matches as $match) {
+            if ($match['type'] == 'Relation' &&
+                $match['parent']['node'] == $parentNode &&
+                $match['relationship'] == $relationship) {
+                return $this;
+            }
+        }
+        
         array_push($this->matches,
             array(
             'type'         => 'Relation',
@@ -618,6 +645,18 @@ class Builder extends IlluminateQueryBuilder {
     public function matchEarly($query) {
          $labels = $query->getModel()->getTable();
         $nodePlaceholder = $this->modelAsNode($labels);
+        // BOOKMARK - avoid redundant relation matches
+        // // update - I don't think these are actually harmful when WHERES are the same
+        // // and are likely required when WHERES are different on relation
+//        foreach ($this->matches as $match) {
+//            if ($match['type'] == 'Relation' &&
+//                $match['direction'] == ) {
+//                
+//            }   else if (
+//                $match['node'] == $nodePlaceholder) {
+//                return $this;
+//            }
+//        }
         $this->matches[] = [
             'type'  => 'Early',
             'property' => 'id',

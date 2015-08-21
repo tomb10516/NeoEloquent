@@ -105,6 +105,57 @@ class QueryingRelationsTest extends TestCase {
         $this->assertEquals(1, count($postWithTen));
         $this->assertEquals($postWithTenComments->toArray(), $postWithTen->first()->toArray());
     }
+    
+         public function testQueryingHasCountDelAfterDel()
+    {
+        $postNoComment   = Post::create(['title' => 'I have no comments =(', 'body' => 'None!']);
+        $postWithComment = Post::create(['title' => 'Nananana', 'body' => 'Commentmaaan']);
+        $postWithTwoComments = Post::create(['title' => 'I got two']);
+        $postWithTenComments = Post::create(['tite' => 'Up yours posts, got 10 here']);
+
+        $comment = new CommentDel(['text' => 'food']);
+        $postWithComment->commentDels()->save($comment);
+
+        // add two commentDels to $postWithTwoComments
+        for($i = 0; $i < 2; $i++)
+        {
+            $postWithTwoComments->commentDels()->create(['text' => "Comment $i"]);
+        }
+        // add ten commentDels to $postWithTenComments
+        for ($i = 0; $i < 10; $i++)
+        {
+            $postWithTenComments->commentDels()->create(['text' => "Comment $i"]);
+        }
+
+        $allPosts = Post::get();
+        $this->assertEquals(4, count($allPosts));
+
+        $posts = Post::has('commentDels')->get();
+        $this->assertEquals(3, count($posts));
+        $expectedHasComments = [$postWithComment->id, $postWithTwoComments->id, $postWithTenComments->id];
+        foreach ($posts as $key => $post)
+        {
+            $this->assertTrue(in_array($post->id, $expectedHasComments));
+        }
+
+        $postsWithMoreThanOneComment = Post::has('commentDels', '>=', 2)->get();
+        $this->assertEquals(2, count($postsWithMoreThanOneComment));
+        $expectedWithMoreThanOne = [$postWithTwoComments->id, $postWithTenComments->id];
+        foreach ($postsWithMoreThanOneComment as $post)
+        {
+            $this->assertTrue(in_array($post->id, $expectedWithMoreThanOne));
+        }
+
+        $commentToDelete = $postWithTenComments->commentDels()->first();
+        $commentToDelete->delete();
+        
+        $postWithNine = Post::has('commentDels', '=', 9)->get();
+        $this->assertEquals(1, count($postWithNine));
+        $this->assertEquals($postWithTenComments->id, $postWithNine->first()->id);
+        
+        // bookmark: getting rid of redundant matches and bindings when multiple has() calls
+        $postsOrdered = Post::has('commentDels')->has('commentDels')->get();
+    }
 
     public function testQueryingWhereHasOne()
     {
