@@ -83,7 +83,7 @@ class Builder extends IlluminateQueryBuilder {
         $this->client = $connection->getClient();
     }
     
-        /**
+            /**
      * Add an "order by" clause to the query.
      *
      * @param  string  $column
@@ -92,12 +92,12 @@ class Builder extends IlluminateQueryBuilder {
      */
     public function orderByRelation($column, $direction = 'asc')
     {
-        $relation = $this->getHasRelationQuery($column);
-        
+        $column = strtolower($column) . "_count";
+        $raw = true;
         
         $direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';
 
-        $this->{$property}[] = compact('column', 'direction');
+        $this->{'orders'}[] = compact('column', 'direction', 'raw');
 
         return $this;
     }

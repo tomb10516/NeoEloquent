@@ -404,9 +404,20 @@ class CypherGrammar extends Grammar {
      */
     public function compileOrders(Builder $query, $orders)
     {
-        return 'ORDER BY '. implode(', ', array_map(function($order){
-                return $this->wrap($order['column']).' '.mb_strtoupper($order['direction']);
+        $retval = null;
+        
+        $retval =  'ORDER BY '. implode(', ', array_map(function($order){
+            $rv = null;
+            if (isset($order['raw']) && $order['raw']) {
+                $rv = $order['column'].' '.mb_strtoupper($order['direction']);
+            } else {
+                $rv = $this->wrap($order['column']).' '.mb_strtoupper($order['direction']);
+            }
+            return $rv;
+                
         }, $orders));
+        
+        return $retval;
     }
 
     /**

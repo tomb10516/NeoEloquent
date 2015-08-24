@@ -153,8 +153,13 @@ class QueryingRelationsTest extends TestCase {
         $this->assertEquals(1, count($postWithNine));
         $this->assertEquals($postWithTenComments->id, $postWithNine->first()->id);
         
-        // bookmark: getting rid of redundant matches and bindings when multiple has() calls
-        $postsOrdered = Post::has('commentDels')->has('commentDels')->get();
+        // tomb - ensure that multiple has clauses do not make problems with the Early MATCHES
+        // TODO check output of $postsOrdered, I only verified this seems to work by looking
+        // at the raw neo4j SQL logs
+//        $postsOrdered = Post::has('commentDels')->has('commentDels')->get();
+        
+        $postsOrdered = Post::has('commentDels')->orderByRelation('commentDel', 'desc')->get();
+        
     }
 
     public function testQueryingWhereHasOne()
