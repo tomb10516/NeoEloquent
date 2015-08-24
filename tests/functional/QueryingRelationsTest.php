@@ -169,6 +169,30 @@ class QueryingRelationsTest extends TestCase {
         }
     }
 
+    public function testQueryingNestedWhereHas()
+    {
+        $user = User::create(['name' => 'cappuccino']);
+        $role = Role::createWith(['alias' => 'pikachu'], [
+            'permissions' => [
+                'title' => 'Read Things',
+                'alias' => 'read'
+            ]
+        ]);
+        $account = Account::create(['guid' => uniqid()]);
+
+        $user->roles()->save($role);
+        $user->account()->save($account);
+
+        $found = User::whereHas('roles', function($q){
+            $q->whereHas('permissions', function($q){
+                $q->where('alias', 'read');
+            });
+        })->first();
+
+        $this->assertInstanceOf('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\User', $found);
+        $this->assertEquals($user->toArray(), $found->toArray());
+    }
+    
     public function testQueryingWhereHasOne()
     {
         $mrAdmin        = User::create(['name' => 'Rundala']);
