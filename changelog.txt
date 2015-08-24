@@ -1,0 +1,27 @@
+tomb 1.2.6 47b842
+
+NOTE: this is only tested to work with neo4j 2.2.4, it is known not to work with 2.2.1 in some cases.
+
+1: Fixed error in pagination when soft deletes in use
+
+2: Fixed bug that was causing errors when has() function was used with models with the soft deletion trait.
+
+3: Fixed bug in aggregation which was causing crashes when the 'percentile' property of an aggrigate was not set. (see compileAggregate)
+
+Details:
+
+#1: 
+
+Overloaded getCountForPagination() so that it works with NeoEloquent result sets rather than the array that Eloquent uses.
+
+#2
+
+I did this by creating what I'm calling "early" matches.  The problem before was that related models were not being checked for deletion status.  My solution was to add an additional MATCH statement to the beginning of the compiled querry with a WITH clause checking for deletion.  An example of this is the cypher generated in the testQueryingHasCountDel test from the line:
+
+     $postWithTen = Post::has('commentDels', '=', 10)->get();
+
+MATCH (commentdel:`Commentdel`) WHERE commentdel.deleted_at is null MATCH (post:`Post`), (post)-[`rel_comment_commentdel`:`COMMENT`]->(commentdel)  WITH post, count(commentdel) AS commentdel_count WHERE commentdel_count = 10 RETURN post
+
+Please check:
+
+in matchRelation() I now have it skip relations that have already been matched.  is this going to cause problems? 

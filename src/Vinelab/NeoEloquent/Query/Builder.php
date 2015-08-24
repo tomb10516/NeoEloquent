@@ -82,7 +82,7 @@ class Builder extends IlluminateQueryBuilder {
 
         $this->client = $connection->getClient();
     }
-    
+
     /**
 	 * Set the node's label which the query is targeting.
 	 *
@@ -215,7 +215,7 @@ class Builder extends IlluminateQueryBuilder {
         if (isset($this->groups)) {
             return count($results);
         }
-        
+
         $row = null;
         if ($results->offsetExists(0)) {
             $row = $results->offsetGet(0);
@@ -225,7 +225,7 @@ class Builder extends IlluminateQueryBuilder {
             return 0;
         }
     }
-    
+
     /**
 	 * Add a basic where clause to the query.
 	 *
@@ -594,6 +594,7 @@ class Builder extends IlluminateQueryBuilder {
         $relatedLabels = $related->getTable();
         $parentNode    = $this->modelAsNode($parentLabels);
 
+        // if this relation is already being matched, avoid doing it again
         foreach ($this->matches as $match) {
             if ($match['type'] == 'Relation' &&
                 $match['parent']['node'] == $parentNode &&
@@ -601,7 +602,7 @@ class Builder extends IlluminateQueryBuilder {
                 return $this;
             }
         }
-        
+
         array_push($this->matches,
             array(
             'type'         => 'Relation',
@@ -622,22 +623,19 @@ class Builder extends IlluminateQueryBuilder {
 
         return $this;
     }
-    
+
+    /**
+     * "Early" matches are for filtering models that appear later in the
+     * query.  This is required for supporting soft deletion with
+     * relationship querries
+     *
+     * @param type $query
+     * @return \Vinelab\NeoEloquent\Query\Builder
+     */
     public function matchEarly($query) {
-         $labels = $query->getModel()->getTable();
+        $labels = $query->getModel()->getTable();
         $nodePlaceholder = $this->modelAsNode($labels);
-        // BOOKMARK - avoid redundant relation matches
-        // // update - I don't think these are actually harmful when WHERES are the same
-        // // and are likely required when WHERES are different on relation
-//        foreach ($this->matches as $match) {
-//            if ($match['type'] == 'Relation' &&
-//                $match['direction'] == ) {
-//                
-//            }   else if (
-//                $match['node'] == $nodePlaceholder) {
-//                return $this;
-//            }
-//        }
+
         $this->matches[] = [
             'type'  => 'Early',
             'property' => 'id',

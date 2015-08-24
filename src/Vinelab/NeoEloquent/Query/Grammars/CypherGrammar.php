@@ -117,8 +117,6 @@ class CypherGrammar extends Grammar {
     {
         if ( ! is_array($matches) || empty($matches)) return '';
 
-//        $prepared = array();
-
         $retval = "";
         foreach ($matches as $match)
         {
@@ -129,23 +127,21 @@ class CypherGrammar extends Grammar {
 
         return $retval;
     }
-    
+
     public function prepareMatchEarly(array $match) {
         $node = $match['node'];
         $labels = $this->prepareLabels($match['labels']);
         $property = $match['property'];
 
         $q = $match['query'];
-        
+
         $compwheres = $this->compileWheres($q);
-        
+
         $matchStatement = '(%s%s) ';
-        
+
         $retVal =  sprintf($matchStatement, $node, $labels) . $compwheres;
-        
+
         return $retVal;
-        
-        
     }
 
     /**
@@ -165,7 +161,6 @@ class CypherGrammar extends Grammar {
 
         // Prepare labels for query
         $parentLabels  = $this->prepareLabels($parent['labels']);
-//        $relatedLabels = $this->prepareLabels($related['labels']);
 
         // Get the relationship ready for query
         $relationshipLabel = $this->prepareRelation($relationship, $related['node']);
@@ -397,6 +392,8 @@ class CypherGrammar extends Grammar {
 
     /**
      * Compile the "order by" portions of the query.
+     * If an order has the 'raw' property then its "column" will
+     * not be wrapped.  This is to support ordering by relationship.
      *
      * @param  \Vinelab\NeoEloquent\Query\Builder $query
      * @param  array  $orders
@@ -405,7 +402,7 @@ class CypherGrammar extends Grammar {
     public function compileOrders(Builder $query, $orders)
     {
         $retval = null;
-        
+
         $retval =  'ORDER BY '. implode(', ', array_map(function($order){
             $rv = null;
             if (isset($order['raw']) && $order['raw']) {
@@ -414,9 +411,9 @@ class CypherGrammar extends Grammar {
                 $rv = $this->wrap($order['column']).' '.mb_strtoupper($order['direction']);
             }
             return $rv;
-                
+
         }, $orders));
-        
+
         return $retval;
     }
 

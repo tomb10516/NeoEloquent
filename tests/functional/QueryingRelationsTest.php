@@ -60,8 +60,8 @@ class QueryingRelationsTest extends TestCase {
         $this->assertEquals(1, count($postWithTen));
         $this->assertEquals($postWithTenComments->toArray(), $postWithTen->first()->toArray());
     }
-    
-     public function testQueryingHasCountDel()
+
+    public function testQueryingHasCountDel()
     {
         $postNoComment   = Post::create(['title' => 'I have no comments =(', 'body' => 'None!']);
         $postWithComment = Post::create(['title' => 'Nananana', 'body' => 'Commentmaaan']);
@@ -105,8 +105,8 @@ class QueryingRelationsTest extends TestCase {
         $this->assertEquals(1, count($postWithTen));
         $this->assertEquals($postWithTenComments->toArray(), $postWithTen->first()->toArray());
     }
-    
-         public function testQueryingHasCountDelAfterDel()
+
+    public function testQueryingHasCountDelAfterDel()
     {
         $postNoComment   = Post::create(['title' => 'I have no comments =(', 'body' => 'None!']);
         $postNoComment->tags()->save(Tag::create());
@@ -116,7 +116,7 @@ class QueryingRelationsTest extends TestCase {
         $postWithTwoComments->tags()->save(Tag::create());
         $postWithTenComments = Post::create(['tite' => 'Up yours posts, got 10 here']);
         $postWithTenComments->tags()->save(Tag::create());
-        
+
         $comment = new CommentDel(['text' => 'food']);
         $postWithComment->commentDels()->save($comment);
 
@@ -152,14 +152,14 @@ class QueryingRelationsTest extends TestCase {
 
         $commentToDelete = $postWithTenComments->commentDels()->first();
         $commentToDelete->delete();
-        
+
         $postWithNine = Post::has('commentDels', '=', 9)->get();
         $this->assertEquals(1, count($postWithNine));
         $this->assertEquals($postWithTenComments->id, $postWithNine->first()->id);
-        
+
         $postsOrdered = Post::orderByHas('commentDels', 'desc')->has('tags')->get();
         $this->assertEquals(3, count($postsOrdered));
-        $lowest = null; 
+        $lowest = null;
         foreach ($postsOrdered as $post) {
             $newLowest = $post->commentDels()->count();
             if ($lowest != null) {
@@ -167,8 +167,6 @@ class QueryingRelationsTest extends TestCase {
             }
             $lowest = $newLowest;
         }
-        
-        
     }
 
     public function testQueryingWhereHasOne()
@@ -886,7 +884,8 @@ class Post extends Model {
     {
         return $this->hasMany('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\Comment', 'COMMENT');
     }
-    
+
+    // these are comments with soft deletes
     public function commentDels()
     {
         return $this->hasMany('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\CommentDel', 'COMMENT');
@@ -936,7 +935,7 @@ class CommentDel extends Model {
     use SoftDeletes;
 
     protected $dates = ['deleted_at'];
-    
+
     protected $label = 'Commentdel';
 
     protected $fillable = ['text'];
