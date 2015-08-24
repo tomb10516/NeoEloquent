@@ -615,6 +615,19 @@ class Builder extends IlluminateBuilder
         return count($matched) > 1 ? true : false;
     }
 
+    public function orderByHas($relation, $direction = 'asc', $operator = '>=', $count = 1, $boolean = 'and', Closure $callback = null) {
+        $this->has($relation, $operator, $count, $boolean , $callback);
+        $wheres = $this->getQuery()->wheres;
+        $column = $wheres[count($wheres) - 1]['column'];
+        
+        $raw = true;
+        $direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';
+
+        $this->getQuery()->orders[] = compact('column', 'direction', 'raw');
+        
+        return $this;
+    }
+    
     /**
      * Add a relationship query condition.
      *

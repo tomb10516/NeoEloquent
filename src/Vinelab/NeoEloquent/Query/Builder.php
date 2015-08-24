@@ -83,25 +83,6 @@ class Builder extends IlluminateQueryBuilder {
         $this->client = $connection->getClient();
     }
     
-            /**
-     * Add an "order by" clause to the query.
-     *
-     * @param  string  $column
-     * @param  string  $direction
-     * @return $this
-     */
-    public function orderByRelation($column, $direction = 'asc')
-    {
-        $column = strtolower($column) . "_count";
-        $raw = true;
-        
-        $direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';
-
-        $this->{'orders'}[] = compact('column', 'direction', 'raw');
-
-        return $this;
-    }
-
     /**
 	 * Set the node's label which the query is targeting.
 	 *

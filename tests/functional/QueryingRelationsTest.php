@@ -109,10 +109,14 @@ class QueryingRelationsTest extends TestCase {
          public function testQueryingHasCountDelAfterDel()
     {
         $postNoComment   = Post::create(['title' => 'I have no comments =(', 'body' => 'None!']);
+        $postNoComment->tags()->save(Tag::create());
         $postWithComment = Post::create(['title' => 'Nananana', 'body' => 'Commentmaaan']);
+        $postWithComment->tags()->save(Tag::create());
         $postWithTwoComments = Post::create(['title' => 'I got two']);
+        $postWithTwoComments->tags()->save(Tag::create());
         $postWithTenComments = Post::create(['tite' => 'Up yours posts, got 10 here']);
-
+        $postWithTenComments->tags()->save(Tag::create());
+        
         $comment = new CommentDel(['text' => 'food']);
         $postWithComment->commentDels()->save($comment);
 
@@ -153,12 +157,17 @@ class QueryingRelationsTest extends TestCase {
         $this->assertEquals(1, count($postWithNine));
         $this->assertEquals($postWithTenComments->id, $postWithNine->first()->id);
         
-        // tomb - ensure that multiple has clauses do not make problems with the Early MATCHES
-        // TODO check output of $postsOrdered, I only verified this seems to work by looking
-        // at the raw neo4j SQL logs
-//        $postsOrdered = Post::has('commentDels')->has('commentDels')->get();
+        $postsOrdered = Post::orderByHas('commentDels', 'desc')->has('tags')->get();
+        $this->assertEquals(3, count($postsOrdered));
+        $lowest = null; 
+        foreach ($postsOrdered as $post) {
+            $newLowest = $post->commentDels()->count();
+            if ($lowest != null) {
+                $this->assertLessThanOrEqual($lowest, $newLowest);
+            }
+            $lowest = $newLowest;
+        }
         
-        $postsOrdered = Post::has('commentDels')->orderByRelation('commentDel', 'desc')->get();
         
     }
 
