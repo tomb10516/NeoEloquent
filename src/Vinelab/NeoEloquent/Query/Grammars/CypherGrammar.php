@@ -323,6 +323,19 @@ class CypherGrammar extends Grammar {
 
         return $this->wrap($where['column']).' '.$where['operator'].' '.$value;
     }
+    
+    protected function whereRelation(Builder $query, $where)
+    {
+        $value = $this->parameter($where);
+        $match = $this->query->matches[0]; // todo, search for match, don't just grab first
+        $related       = $match['related'];
+        $relationship  = $match['relationship'];
+
+        // Get the relationship ready for query
+        $relationshipLabel = $this->prepareRelationVar($relationship, $related['node']);
+        
+        return $relationshipLabel . '.' . $where['column'].' '.$where['operator'].' '.$value;
+    }
 
     /**
      * Compiled a WHERE clause with carried identifiers.

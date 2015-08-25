@@ -225,6 +225,121 @@ class Builder extends IlluminateQueryBuilder {
             return 0;
         }
     }
+    
+     /**
+	 * Add a basic where clause to the query.
+	 *
+	 * @param  string  $column
+	 * @param  string  $operator
+	 * @param  mixed   $value
+	 * @param  string  $boolean
+	 * @return \Illuminate\Database\Query\Builder|static
+	 *
+	 * @throws \InvalidArgumentException
+	 */
+	public function whereRel($column, $operator = null, $value = null, $boolean = 'and')
+	{
+        // First we check whether the operator is 'IN' so that we call whereIn() on it
+        // as a helping hand and centralization strategy, whereIn knows what to do with the IN operator.
+        if (mb_strtolower($operator) == 'in')
+        {
+            return $this->whereIn($column, $value, $boolean);
+        }
+
+//        // If the column is an array, we will assume it is an array of key-value pairs
+//		// and can add them each as a where clause. We will maintain the boolean we
+//		// received when the method was called and pass it into the nested where.
+//		if (is_array($column))
+//		{
+//			return $this->whereNested(function(IlluminateQueryBuilder $query) use ($column)
+//			{
+//				foreach ($column as $key => $value)
+//				{
+//					$query->where($key, '=', $value);
+//				}
+//			}, $boolean);
+//		}
+
+		if (func_num_args() == 2)
+		{
+			list($value, $operator) = array($operator, '=');
+		}
+		elseif ($this->invalidOperatorAndValue($operator, $value))
+		{
+			throw new \InvalidArgumentException("Value must be provided.");
+		}
+
+		// If the columns is actually a Closure instance, we will assume the developer
+		// wants to begin a nested where statement which is wrapped in parenthesis.
+		// We'll add that Closure to the query then return back out immediately.
+		if ($column instanceof Closure)
+		{
+			return $this->whereNested($column, $boolean);
+		}
+
+		// If the given operator is not found in the list of valid operators we will
+		// assume that the developer is just short-cutting the '=' operators and
+		// we will set the operators to '=' and set the values appropriately.
+		if ( ! in_array(mb_strtolower($operator), $this->operators, true))
+		{
+			list($value, $operator) = array($operator, '=');
+		}
+
+		// If the value is a Closure, it means the developer is performing an entire
+		// sub-select within the query and we will need to compile the sub-select
+		// within the where clause to get the appropriate query record results.
+		if ($value instanceof Closure)
+		{
+			return $this->whereSub($column, $operator, $value, $boolean);
+		}
+
+		// If the value is "null", we will just assume the developer wants to add a
+		// where null clause to the query. So, we will allow a short-cut here to
+		// that method for convenience so the developer doesn't have to check.
+		if (is_null($value))
+		{
+			return $this->whereNull($column, $boolean, $operator != '=');
+		}
+
+		// Now that we are working with just a simple query we can put the elements
+		// in our array and add the query binding to our array of bindings that
+		// will be bound to each SQL statements when it is finally executed.
+		$type = 'Relation';
+
+        $property = $column;
+
+        // When the column is an id we need to treat it as a graph db id and transform it
+        // into the form of id(n) and the typecast the value into int.
+        if ($column == 'id')
+        {
+            $column = 'id('. $this->modelAsNode() .')';
+            $value = intval($value);
+        }
+        // When it's been already passed in the form of NodeLabel.id we'll have to
+        // re-format it into id(NodeLabel)
+        elseif (preg_match('/^.*\.id$/', $column))
+        {
+            $parts = explode('.', $column);
+            $column = sprintf('%s(%s)', $parts[1], $parts[0]);
+            $value = intval($value);
+        }
+        // Also if the $column is already a form of id(n) we'd have to type-cast the value into int.
+        elseif (preg_match('/^id\(.*\)$/', $column)) $value = intval($value);
+
+        $binding = $this->prepareBindingColumn($column);
+
+        $this->wheres[] = compact('type', 'binding', 'column', 'operator', 'value', 'boolean');
+
+        $property = $this->wrap($binding);
+
+        if ( ! $value instanceof Expression)
+        {
+			$this->addBinding([$property => $value], 'where');
+		}
+
+		return $this;
+	}
+
 
     /**
 	 * Add a basic where clause to the query.

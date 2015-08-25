@@ -753,7 +753,52 @@ class QueryingRelationsTest extends TestCase {
 
         $this->assertEquals($acme, $found);
     }
+ public function testFilterRelationProperties()
+    {
+        $organization = Organization::create(['name' => "cOrg"]);
+        for ($i = 0; $i < 4; $i++) {
+            $user = User::create(['name' => 'user' . $i]);
+            $organization->members()->save($user);
+            $membershipRelation = $organization->members()->edge($user);
+            if ($i < 2) {
+                $membershipRelation->status = 'active';
+            } else {
+                $membershipRelation->status = 'expired';
+            }
+            $membershipRelation->save();
+        }
+        $orgHas = Organization::has('members')->get();
+            $orgM = $organization->members(); // this is a HasMany
+        $orgMWhere = $orgM->whereRel('status', '=', 'active'); // this is a HasMany
+        $gotten = $orgMWhere->get();
+return;
 
+
+//       $foo = Organization::has('members', '>=', '0', 'and', function($q) {
+//            $q->carry([$relation->getParentNode(), "count(foo)" => $countPart]);
+//            $q->whereCarried($countPart, $operator, $count);
+//       });
+//       $barr = $foo->get();
+
+        $foundQ = Organization::whereHas('members', function($q) {
+                $q->where('alias', 'read');
+            });
+        $found = $foundQ->get();
+
+// try closure
+        $name = $organization->name;
+        $closure = function($q) use ($name) {
+            $q->where('id', '=', $name);
+        };
+        $whereClosure = $organization->where($closure, '=', 'foo');
+        $whereClosureResults = $whereClosure->get();
+
+        $orgMHas = Organization::has('members'); // NeoEloquent/Eloquent/Builder Organization model
+        $orgMWhere = $orgM->where('status', '=', 'active'); // this is a HasMany
+
+        $activeMembers = $organization->members()->where('status', '=', 'active')->get(); // Collection
+    }
+    
     public function testSavingCreateWithRelationWithDateTimeAndCarbonInstances()
     {
         $yesterday = Carbon::now()->subDay();

@@ -16,6 +16,11 @@ class HasMany extends HasOneOrMany {
         return $this->query->get();
     }
 
+//    public function whereRel($column, $operator = null, $value = null, $boolean = 'and') {
+//        return $this->where($column, $operator = null, $value = null, $boolean = 'and');
+//    }
+
+    
     /**
      * Get an instance of the Edge relationship.
      *

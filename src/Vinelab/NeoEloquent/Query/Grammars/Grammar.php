@@ -76,6 +76,10 @@ class Grammar extends IlluminateGrammar {
         return trim(':`'. preg_replace('/^:/', '', $label) .'`');
     }
 
+    public function prepareRelationVar($relation, $related) {
+        return "rel_". mb_strtolower($relation) .'_'. $related;
+    }
+    
     /**
      * Prepare a relationship label.
      *
@@ -84,7 +88,7 @@ class Grammar extends IlluminateGrammar {
      */
     public function prepareRelation($relation, $related)
     {
-        return "`rel_". mb_strtolower($relation) .'_'. $related ."`:`{$relation}`";
+        return "`" . $this->prepareRelationVar($relation, $related) ."`:`{$relation}`";
     }
 
     /**
