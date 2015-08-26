@@ -767,13 +767,21 @@ class QueryingRelationsTest extends TestCase {
             }
             $membershipRelation->save();
         }
-        // BOOKMARK detect multiple relationships and inform not implemented
         $activeMembers = $organization->members()->whereRel('status', '=', 'active')->get();
         $this->assertEquals(2, count($activeMembers));
         foreach ($activeMembers as $member) {
             $membershipEdge = $organization->members()->edge($member);
             $this->assertEquals('active', $membershipEdge->status);
         }
+    }
+    
+    /**
+     * @expectedException Vinelab\NeoEloquent\Exceptions\NeoEloquentException
+     */
+    public function testFilterRelationPropertiesNoRelation()
+    {
+        $organization = Organization::create(['name' => "cOrg"]);
+        $activeMembers = $organization->whereRel('status', '=', 'active')->get();
     }
     
     public function testSavingCreateWithRelationWithDateTimeAndCarbonInstances()

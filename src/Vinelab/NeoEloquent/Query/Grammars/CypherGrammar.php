@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Query\Builder;
 use Vinelab\NeoEloquent\Exceptions\InvalidCypherGrammarComponentException;
+use Vinelab\NeoEloquent\Exceptions\NeoEloquentException;
 
 class CypherGrammar extends Grammar {
 
@@ -169,6 +170,7 @@ class CypherGrammar extends Grammar {
         // so we will have to turn it into something like id(node)
         $property = $property == 'id' ? 'id('. $parent['node'] .')' : $parent['node'] .'.'. $property;
 
+        // FIXME: why did I set what used to be $relatedLabels to null?
         return '('. $parent['node'] . $parentLabels .'), '
                 . $this->craftRelation($parent['node'], $relationshipLabel, $related['node'], null, $direction);
     }
@@ -327,7 +329,25 @@ class CypherGrammar extends Grammar {
     protected function whereRelation(Builder $query, $where)
     {
         $value = $this->parameter($where);
-        $match = $this->query->matches[0]; // FIXME: search for match, don't just grab first
+        
+        $match = null;
+        // get the relationship match so we can give the column the appropriate prefix
+        // also make sure only one relationship match existsin the query
+        foreach($this->query->matches as $m) {
+            if ($m['type'] == 'Relation') {
+                if ($match == null) {
+                    $match = $m;
+                } else {
+                    throw new NeoEloquentException(
+                        "not yet implemented - whereRelation does not yet support querries with multiple relations");
+                }
+            }
+        }
+        if (!$match) {
+            throw new NeoEloquentException(
+                "whereRelation requires a relation in the query");
+        }
+        
         $related       = $match['related'];
         $relationship  = $match['relationship'];
 
