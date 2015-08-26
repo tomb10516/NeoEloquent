@@ -419,7 +419,13 @@ class Builder extends IlluminateBuilder {
     }
 
     /**
-     * FIXME: document
+     * Early matches are needed for statements with a
+     * relation match.  The "early" match is where the related node
+     * is matched before the edge.  This is required because otherwise
+     * the WHERE for soft deletion causes an error in the Cypher output
+     * 
+     * I (tomb) beleive this remains efficient, but someone who knows
+     * neo4j better than I do should check.
      * 
      * @param type $query
      * @return \Vinelab\NeoEloquent\Eloquent\Builder
@@ -653,7 +659,7 @@ class Builder extends IlluminateBuilder {
      * the ordering, then the 3rd argument is the same as the 2nd argument of Has()
      * and so forth.
      *
-     * for example if you were calling has like
+     * for example if you were calling has() like
      *   $postsWithAtLeast2Comments = Post::has('comments', '>=', 2);
      * if you want those same results except ordered by number of comments
      * in descending order you would write
@@ -669,7 +675,9 @@ class Builder extends IlluminateBuilder {
     public function orderByHas($relation, $direction = 'asc', $operator = '>=', $count = 1, $boolean = 'and', Closure $callback = null) {
         $this->has($relation, $operator, $count, $boolean , $callback);
         $wheres = $this->getQuery()->wheres;
-        $column = $wheres[count($wheres) - 1]['column']; // FIXME
+        // the count column should always be the top of the stack because no other
+        // where statements should be processed between the call to has() and here
+        $column = $wheres[count($wheres) - 1]['column'];
 
         $raw = true;
         $direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';
