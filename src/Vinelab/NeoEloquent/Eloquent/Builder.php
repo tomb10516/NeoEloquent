@@ -418,6 +418,12 @@ class Builder extends IlluminateBuilder {
         return $this;
     }
 
+    /**
+     * FIXME: document
+     * 
+     * @param type $query
+     * @return \Vinelab\NeoEloquent\Eloquent\Builder
+     */
     public function matchEarly($query)
     {
         $this->query->matchEarly($query);
@@ -663,7 +669,7 @@ class Builder extends IlluminateBuilder {
     public function orderByHas($relation, $direction = 'asc', $operator = '>=', $count = 1, $boolean = 'and', Closure $callback = null) {
         $this->has($relation, $operator, $count, $boolean , $callback);
         $wheres = $this->getQuery()->wheres;
-        $column = $wheres[count($wheres) - 1]['column'];
+        $column = $wheres[count($wheres) - 1]['column']; // FIXME
 
         $raw = true;
         $direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';

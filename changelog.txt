@@ -8,6 +8,8 @@ NOTE: this is only tested to work with neo4j 2.2.4, it is known not to work with
 
 3: Fixed bug in aggregation which was causing crashes when the 'percentile' property of an aggrigate was not set. (see compileAggregate)
 
+4: Added function hasRel() which performs limited wheres on edges
+
 Details:
 
 #1: 

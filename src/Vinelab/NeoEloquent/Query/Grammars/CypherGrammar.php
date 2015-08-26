@@ -327,14 +327,14 @@ class CypherGrammar extends Grammar {
     protected function whereRelation(Builder $query, $where)
     {
         $value = $this->parameter($where);
-        $match = $this->query->matches[0]; // todo, search for match, don't just grab first
+        $match = $this->query->matches[0]; // FIXME: search for match, don't just grab first
         $related       = $match['related'];
         $relationship  = $match['relationship'];
 
         // Get the relationship ready for query
-        $relationshipLabel = $this->prepareRelationVar($relationship, $related['node']);
+        $relationshipVar = $this->prepareRelationVar($relationship, $related['node']);
         
-        return $relationshipLabel . '.' . $where['column'].' '.$where['operator'].' '.$value;
+        return $relationshipVar . '.' . $where['column'].' '.$where['operator'].' '.$value;
     }
 
     /**

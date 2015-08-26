@@ -227,7 +227,9 @@ class Builder extends IlluminateQueryBuilder {
     }
     
      /**
-	 * Add a basic where clause to the query.
+	 * Add a where clause for an edge property
+     * 
+     * Note that nesting is not supported
 	 *
 	 * @param  string  $column
 	 * @param  string  $operator
@@ -246,19 +248,20 @@ class Builder extends IlluminateQueryBuilder {
             return $this->whereIn($column, $value, $boolean);
         }
 
-//        // If the column is an array, we will assume it is an array of key-value pairs
-//		// and can add them each as a where clause. We will maintain the boolean we
-//		// received when the method was called and pass it into the nested where.
-//		if (is_array($column))
-//		{
-//			return $this->whereNested(function(IlluminateQueryBuilder $query) use ($column)
-//			{
-//				foreach ($column as $key => $value)
-//				{
-//					$query->where($key, '=', $value);
-//				}
-//			}, $boolean);
-//		}
+        // FIXME: untested
+        // If the column is an array, we will assume it is an array of key-value pairs
+		// and can add them each as a where clause. We will maintain the boolean we
+		// received when the method was called and pass it into the nested where.
+		if (is_array($column))
+		{
+			return $this->whereNested(function(IlluminateQueryBuilder $query) use ($column)
+			{
+				foreach ($column as $key => $value)
+				{
+					$query->where($key, '=', $value);
+				}
+			}, $boolean);
+		}
 
 		if (func_num_args() == 2)
 		{
@@ -269,14 +272,6 @@ class Builder extends IlluminateQueryBuilder {
 			throw new \InvalidArgumentException("Value must be provided.");
 		}
 
-		// If the columns is actually a Closure instance, we will assume the developer
-		// wants to begin a nested where statement which is wrapped in parenthesis.
-		// We'll add that Closure to the query then return back out immediately.
-		if ($column instanceof Closure)
-		{
-			return $this->whereNested($column, $boolean);
-		}
-
 		// If the given operator is not found in the list of valid operators we will
 		// assume that the developer is just short-cutting the '=' operators and
 		// we will set the operators to '=' and set the values appropriately.
@@ -285,29 +280,18 @@ class Builder extends IlluminateQueryBuilder {
 			list($value, $operator) = array($operator, '=');
 		}
 
-		// If the value is a Closure, it means the developer is performing an entire
-		// sub-select within the query and we will need to compile the sub-select
-		// within the where clause to get the appropriate query record results.
-		if ($value instanceof Closure)
-		{
-			return $this->whereSub($column, $operator, $value, $boolean);
-		}
-
 		// If the value is "null", we will just assume the developer wants to add a
 		// where null clause to the query. So, we will allow a short-cut here to
 		// that method for convenience so the developer doesn't have to check.
-		if (is_null($value))
-		{
-			return $this->whereNull($column, $boolean, $operator != '=');
-		}
+//		if (is_null($value))
+//		{
+//			return $this->whereNull($column, $boolean, $operator != '=');
+//		}
+        // FIXME: support null value
 
-		// Now that we are working with just a simple query we can put the elements
-		// in our array and add the query binding to our array of bindings that
-		// will be bound to each SQL statements when it is finally executed.
 		$type = 'Relation';
 
-        $property = $column;
-
+// FIXME - test
         // When the column is an id we need to treat it as a graph db id and transform it
         // into the form of id(n) and the typecast the value into int.
         if ($column == 'id')
