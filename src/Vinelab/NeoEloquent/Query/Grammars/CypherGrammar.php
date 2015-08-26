@@ -327,7 +327,11 @@ class CypherGrammar extends Grammar {
     
     protected function whereRelation(Builder $query, $where)
     {
-        $value = $this->parameter($where);
+        if ($where['operator'] == "IS NULL" || $where['operator'] == "IS NOT NULL") {
+            $value = "";
+        } else {
+            $value = $this->parameter($where);
+        }
         
         $match = null;
         // get the relationship match so we can give the column the appropriate prefix

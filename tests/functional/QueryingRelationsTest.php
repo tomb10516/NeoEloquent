@@ -775,6 +775,32 @@ class QueryingRelationsTest extends TestCase {
         }
     }
     
+    public function testFilterRelationPropertiesWithNullValue()
+    {
+        $organization = Organization::create(['name' => "cOrg"]);
+        for ($i = 0; $i < 4; $i++) {
+            $user = User::create(['name' => 'user' . $i]);
+            $organization->members()->save($user);
+            $membershipRelation = $organization->members()->edge($user);
+            if ($i < 2) {
+                $membershipRelation->status = 'active';
+            }
+            $membershipRelation->save();
+        }
+        $membersWithoutStatus = $organization->members()->whereRel('status', '=', null)->get();
+        $this->assertEquals(2, count($membersWithoutStatus));
+        foreach ($membersWithoutStatus as $member) {
+            $membershipEdge = $organization->members()->edge($member);
+            $this->assertNull($membershipEdge->status);
+        }
+        $membersWithStatus = $organization->members()->whereRel('status', 'IS NOT NULL')->get();
+        $this->assertEquals(2, count($membersWithStatus));
+        foreach ($membersWithStatus as $member) {
+            $membershipEdge = $organization->members()->edge($member);
+            $this->assertNotNull($membershipEdge->status);
+        }
+    }
+    
     /**
      * @expectedException Vinelab\NeoEloquent\Exceptions\NeoEloquentException
      */

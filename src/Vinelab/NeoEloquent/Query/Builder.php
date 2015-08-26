@@ -68,6 +68,13 @@ class Builder extends IlluminateQueryBuilder {
     );
 
     /**
+     * Some operators take only one argument (the column)
+     */
+    protected $unaryOperators = array(
+        'is null', 'is not null'
+    );
+    
+    /**
      * Create a new query builder instance.
      *
      * @param Vinelab\NeoEloquent\Connection $connection
@@ -263,6 +270,7 @@ class Builder extends IlluminateQueryBuilder {
 			}, $boolean);
 		}
 
+        if (!in_array(mb_strtolower($operator), $this->unaryOperators, true)) {
 		if (func_num_args() == 2)
 		{
 			list($value, $operator) = array($operator, '=');
@@ -271,7 +279,8 @@ class Builder extends IlluminateQueryBuilder {
 		{
 			throw new \InvalidArgumentException("Value must be provided.");
 		}
-
+        }
+        
 		// If the given operator is not found in the list of valid operators we will
 		// assume that the developer is just short-cutting the '=' operators and
 		// we will set the operators to '=' and set the values appropriately.
@@ -280,16 +289,20 @@ class Builder extends IlluminateQueryBuilder {
 			list($value, $operator) = array($operator, '=');
 		}
 
+        $type = 'Relation';
+        
 		// If the value is "null", we will just assume the developer wants to add a
 		// where null clause to the query. So, we will allow a short-cut here to
 		// that method for convenience so the developer doesn't have to check.
-//		if (is_null($value))
-//		{
-//			return $this->whereNull($column, $boolean, $operator != '=');
-//		}
-        // FIXME: support null value
-
-		$type = 'Relation';
+		if (is_null($value))
+		{
+            if ($operator != '=') {
+                $operator = 'IS NOT NULL';
+            } else {
+                $operator = 'IS NULL';
+            }
+            $this->wheres[] = compact('type', 'binding', 'column', 'operator', 'value', 'boolean');
+		} else {
 
 // FIXME - test
         // When the column is an id we need to treat it as a graph db id and transform it
@@ -321,6 +334,8 @@ class Builder extends IlluminateQueryBuilder {
 			$this->addBinding([$property => $value], 'where');
 		}
 
+        }
+        
 		return $this;
 	}
 
