@@ -753,7 +753,7 @@ class QueryingRelationsTest extends TestCase {
 
         $this->assertEquals($acme, $found);
     }
- public function testFilterRelationProperties()
+    public function testFilterRelationProperties()
     {
         $organization = Organization::create(['name' => "cOrg"]);
         for ($i = 0; $i < 4; $i++) {
@@ -767,36 +767,13 @@ class QueryingRelationsTest extends TestCase {
             }
             $membershipRelation->save();
         }
-        $orgHas = Organization::has('members')->get();
-            $orgM = $organization->members(); // this is a HasMany
-        $orgMWhere = $orgM->whereRel('status', '=', 'active'); // this is a HasMany
-        $gotten = $orgMWhere->get();
-return;
-
-
-//       $foo = Organization::has('members', '>=', '0', 'and', function($q) {
-//            $q->carry([$relation->getParentNode(), "count(foo)" => $countPart]);
-//            $q->whereCarried($countPart, $operator, $count);
-//       });
-//       $barr = $foo->get();
-
-        $foundQ = Organization::whereHas('members', function($q) {
-                $q->where('alias', 'read');
-            });
-        $found = $foundQ->get();
-
-// try closure
-        $name = $organization->name;
-        $closure = function($q) use ($name) {
-            $q->where('id', '=', $name);
-        };
-        $whereClosure = $organization->where($closure, '=', 'foo');
-        $whereClosureResults = $whereClosure->get();
-
-        $orgMHas = Organization::has('members'); // NeoEloquent/Eloquent/Builder Organization model
-        $orgMWhere = $orgM->where('status', '=', 'active'); // this is a HasMany
-
-        $activeMembers = $organization->members()->where('status', '=', 'active')->get(); // Collection
+        // BOOKMARK detect multiple relationships and inform not implemented
+        $activeMembers = $organization->members()->whereRel('status', '=', 'active')->get();
+        $this->assertEquals(2, count($activeMembers));
+        foreach ($activeMembers as $member) {
+            $membershipEdge = $organization->members()->edge($member);
+            $this->assertEquals('active', $membershipEdge->status);
+        }
     }
     
     public function testSavingCreateWithRelationWithDateTimeAndCarbonInstances()
