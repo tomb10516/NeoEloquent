@@ -8,6 +8,7 @@ use Illuminadte\Database\Query\Expression;
 use Illuminate\Database\Eloquent\Collection;
 use Vinelab\NeoEloquent\Query\Grammars\Grammar;
 use Illuminate\Database\Query\Builder as IlluminateQueryBuilder;
+use Illuminate\Database\Query\Processors\Processor; // tomb
 
 class Builder extends IlluminateQueryBuilder {
 
@@ -38,6 +39,14 @@ class Builder extends IlluminateQueryBuilder {
      * @var array
      */
     public $with = array();
+    
+        /**
+     * The database query post processor instance.
+     *
+     * @var \Illuminate\Database\Query\Processors\Processor
+     */
+    protected $processor;
+
 
     /**
      * The current query value bindings.
@@ -80,9 +89,12 @@ class Builder extends IlluminateQueryBuilder {
      * @param Vinelab\NeoEloquent\Connection $connection
      * @return void
      */
-    public function __construct(Connection $connection, Grammar $grammar)
+    public function __construct(Connection $connection, 
+        Grammar $grammar, 
+        Processor $processor)
     {
         $this->grammar = $grammar;
+        $this->processor = $processor; // tomb
         $this->grammar->setQuery($this);
 
         $this->connection = $connection;
