@@ -422,11 +422,11 @@ class Builder extends IlluminateQueryBuilder
      *
      * @return \Illuminate\Database\Query\Builder|static
      */
-    public function whereCarried($column, $operator = null, $value = null, $boolean = 'and')
+    public function whereCarried($column, $operator = null, $value = null, $boolean = 'and', $suppressAutoPrefix = false)
     {
         $type = 'Carried';
 
-        $this->wheres[] = compact('type', 'column', 'operator', 'value', 'boolean');
+        $this->wheres[] = compact('type', 'column', 'operator', 'value', 'boolean', 'suppressAutoPrefix');
 
         return $this;
     }
@@ -798,6 +798,11 @@ class Builder extends IlluminateQueryBuilder
         $this->wheres = array_merge((array) $this->wheres, (array) $wheres);
 
         $this->bindings['where'] = array_merge_recursive($this->bindings['where'], (array) $bindings);
+    }
+    
+    public function mergeWiths($withs)
+    {
+        $this->with = array_merge((array) $this->with, (array) $withs);
     }
 
     public function wrap($property)

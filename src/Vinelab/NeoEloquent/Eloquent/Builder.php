@@ -1,6 +1,4 @@
-<?php
-
-namespace Vinelab\NeoEloquent\Eloquent;
+<?php namespace Vinelab\NeoEloquent\Eloquent;
 
 use Closure;
 use Vinelab\NeoEloquent\Helpers;
@@ -14,6 +12,7 @@ use Illuminate\Pagination\Paginator;
 
 class Builder extends IlluminateBuilder
 {
+
     /**
      * The loaded models that should be transformed back
      * to Models. Sometimes we might ask for more than
@@ -40,14 +39,16 @@ class Builder extends IlluminateBuilder
         // so we cast it anyways.
 
         if (is_array($id)) {
-            return $this->findMany(array_map(function ($id) { return (int) $id; }, $id), $properties);
+            return $this->findMany(array_map(function ($id) {
+                        return (int) $id;
+                    }, $id), $properties);
         } else {
             $id = (int) $id;
         }
 
         if ($this->model->getKeyName() === 'id') {
             // ids are treated differently in neo4j so we have to adapt the query to them.
-            $this->query->where($this->model->getKeyName() . '('. $this->query->modelAsNode() .')', '=', $id);
+            $this->query->where($this->model->getKeyName() . '(' . $this->query->modelAsNode() . ')', '=', $id);
         } else {
             $this->query->where($this->model->getKeyName(), '=', $id);
         }
@@ -353,7 +354,6 @@ class Builder extends IlluminateBuilder
         // and each result is either a Node or a single column value
         // so we first extract the returned value and retrieve
         // the attributes according to the result type.
-
         // Only when requesting a single property
         // will we extract the current() row of result.
 
@@ -376,7 +376,7 @@ class Builder extends IlluminateBuilder
 
                     // as already assigned, RETURNed props will be preceded by an 'n.'
                     // representing the node we're targeting.
-                    $returned = $this->query->modelAsNode().".{$property}";
+                    $returned = $this->query->modelAsNode() . ".{$property}";
 
                     $value = $row[$returned];
                 }
@@ -387,11 +387,10 @@ class Builder extends IlluminateBuilder
             // If the node id is in the columns we need to treat it differently
             // since Neo4j's convenience with node ids will be retrieved as id(n)
             // instead of n.id.
-
             // WARNING: Do this after setting all the attributes to avoid overriding it
             // with a null value or colliding it with something else, some Daenerys dragons maybe ?!
             if (!is_null($columns) && in_array('id', $columns)) {
-                $attributes['id'] = $row['id('.$this->query->modelAsNode().')'];
+                $attributes['id'] = $row['id(' . $this->query->modelAsNode() . ')'];
             }
         } elseif ($result instanceof Node) {
             $attributes = $this->getNodeAttributes($result);
@@ -511,7 +510,7 @@ class Builder extends IlluminateBuilder
     {
         $paginator = $this->query->getConnection()->getPaginator();
         $page = $paginator->getCurrentPage();
-        $perPage = $perPage ?: $this->model->getPerPage();
+        $perPage = $perPage ? : $this->model->getPerPage();
         $this->query->skip(($page - 1) * $perPage)->take($perPage + 1);
 
         return new Paginator($this->get($columns), $perPage, $page, [
@@ -650,7 +649,9 @@ class Builder extends IlluminateBuilder
      */
     public function getMorphMutations()
     {
-        return array_filter($this->getMutations(), function ($mutation) { return $this->isMorphMutation($mutation); });
+        return array_filter($this->getMutations(), function ($mutation) {
+            return $this->isMorphMutation($mutation);
+        });
     }
 
     /**
@@ -678,7 +679,7 @@ class Builder extends IlluminateBuilder
             return true;
         });
 
-        return  count($matched) > 1 ? true : false;
+        return count($matched) > 1 ? true : false;
     }
 
     /**
@@ -723,10 +724,10 @@ class Builder extends IlluminateBuilder
              *
              * Which is the result of Post::has('comments', '>=', 10)->get();
              */
-            $countPart = $prefix.'_count';
+            $countPart = $prefix . '_count';
             $this->carry([$relation->getParentNode(), "count($prefix)" => $countPart]);
             $this->whereCarried($countPart, $operator, $count);
-        }
+        } // do something similar to cary  deleted column?
 
         $parentNode = $relation->getParentNode();
         $relatedNode = $relation->getRelatedNode();
@@ -735,16 +736,12 @@ class Builder extends IlluminateBuilder
         // Set the relationship match clause.
         $method = $this->getMatchMethodName($relation);
 
-        $this->$method($relation->getParent(),
-            $relation->getRelated(),
-            $relatedNode,
-            $relation->getForeignKey(),
-            $relation->getLocalKey(),
-            $relation->getParentLocalKeyValue());
+        $this->$method($relation->getParent(), $relation->getRelated(), $relatedNode, $relation->getForeignKey(), $relation->getLocalKey(), $relation->getParentLocalKeyValue());
 
         // Prefix all the columns with the relation's node placeholder in the query
         // and merge the queries that needs to be merged.
-        $this->prefixAndMerge($query, $prefix);
+//        $this->prefixAndMerge($query, $prefix);
+        $this->prefixAndMergeWith($query, $prefix);
 
         /*
          * After that we've done everything we need with the Has() and related we need
@@ -797,7 +794,7 @@ class Builder extends IlluminateBuilder
             $name = $relation;
             // Get the relation by calling the model's relationship function.
             if (!method_exists($this->model, $relation)) {
-                throw new QueryException("The relation method $relation() does not exist on ".get_class($this->model));
+                throw new QueryException("The relation method $relation() does not exist on " . get_class($this->model));
             }
 
             $relationship = $this->model->$relation();
@@ -810,8 +807,7 @@ class Builder extends IlluminateBuilder
             // this is probably a One-To-One relationship or the dev decided not to add
             // multiple records as relations so we'll wrap it up in an array.
             if (
-                (!is_array($values) || Helpers::isAssocArray($values) || $values instanceof Model)
-                && !($values instanceof Collection)
+                (!is_array($values) || Helpers::isAssocArray($values) || $values instanceof Model) && !($values instanceof Collection)
             ) {
                 $values = [$values];
             }
@@ -873,7 +869,6 @@ class Builder extends IlluminateBuilder
         // We need to get the attributes of each $value from $values into
         // an instance of the related model so that we make sure that it goes
         // through the $fillable filter pipeline.
-
         // This adds support for having model instances mixed with values, so whenever
         // we encounter a Model we take it as our instance
         if ($attributes instanceof Model) {
@@ -907,6 +902,13 @@ class Builder extends IlluminateBuilder
         $this->query->mergeWheres($query->getQuery()->wheres, $query->getQuery()->getBindings());
     }
 
+    protected function prefixAndMergeWith(Builder $query, $prefix)
+    {
+        $this->prefixWheres($query, $prefix);
+        $this->query->mergeWheres($query->getQuery()->wheres, $query->getQuery()->getBindings());
+        $this->query->mergeWiths($query->getQuery()->with);
+    }
+
     /**
      * Prefix where clauses' columns.
      *
@@ -918,7 +920,12 @@ class Builder extends IlluminateBuilder
         if (is_array($query->getQuery()->wheres)) {
             $query->getQuery()->wheres = array_map(function ($where) use ($prefix) {
                 $column = $where['column'];
-                $where['column'] = ($this->isId($column)) ? $column : $prefix.'.'.$column;
+                $suppressAutoPrefix = $where['suppressAutoPrefix'];
+                if (!$suppressAutoPrefix) {
+                    $where['column'] = ($this->isId($column)) ? $column : $prefix . '.' . $column;
+                } else {
+                    $where['column'] = $column;
+                }
 
                 return $where;
             }, $query->getQuery()->wheres);
@@ -946,6 +953,6 @@ class Builder extends IlluminateBuilder
      */
     protected function getMatchMethodName($relation)
     {
-        return 'match'.ucfirst(mb_strtolower($relation->getEdgeDirection()));
+        return 'match' . ucfirst(mb_strtolower($relation->getEdgeDirection()));
     }
 }
