@@ -460,6 +460,21 @@ class Builder extends IlluminateBuilder
     }
 
     /**
+     * 
+     * "early" matches are for supporting soft deletion and other situations when you have something
+     * that needs to be MATCHed before the main MATCH statement.
+     * 
+     * @param type $query
+     * @return \Vinelab\NeoEloquent\Eloquent\Builder
+     */
+    public function matchEarly($query)
+    {
+        $this->query->matchEarly($query);
+
+        return $this;
+    }
+    
+    /**
      * Add an OUTGOING "->" relationship MATCH to the query.
      *
      * @param Vinelab\NeoEloquent\Eloquent\Model $parent       The parent model
@@ -730,6 +745,11 @@ class Builder extends IlluminateBuilder
 
         $parentNode = $relation->getParentNode();
         $relatedNode = $relation->getRelatedNode();
+        
+        // do early match here, this is required to support soft deletes
+        $this->prefixWheres($query, $prefix);
+        $this->matchEarly($query);
+        
         // Tell the query to select our parent node only.
         $this->select($parentNode);
         // Set the relationship match clause.
@@ -744,7 +764,9 @@ class Builder extends IlluminateBuilder
 
         // Prefix all the columns with the relation's node placeholder in the query
         // and merge the queries that needs to be merged.
-        $this->prefixAndMerge($query, $prefix);
+        // tomb - The following line of code causes problems for soft deletes, but I'm leaving it here,
+        // commented out, because I don't remember why it caused problems (this was code from August)
+        // $this->prefixAndMerge($query, $prefix);
 
         /*
          * After that we've done everything we need with the Has() and related we need

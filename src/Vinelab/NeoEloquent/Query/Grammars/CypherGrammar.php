@@ -120,16 +120,35 @@ class CypherGrammar extends Grammar
             return '';
         }
 
-        $prepared = array();
+        // tomb - commenting out for soft delete fix
+        //        $prepared = array(); 
+        $retval = "";
 
         foreach ($matches as $match) {
             $method = 'prepareMatch'.ucfirst($match['type']);
-            $prepared[] = $this->$method($match);
+            $prepared = $this->$method($match);
+            $retval .= "MATCH " . $prepared . ' ';
         }
 
-        return 'MATCH '.implode(', ', $prepared);
+        return $retval;
     }
 
+    public function prepareMatchEarly(array $match) {
+        $node = $match['node'];
+        $labels = $this->prepareLabels($match['labels']);
+        $property = $match['property'];
+
+        $q = $match['query'];
+        
+        $compwheres = $this->compileWheres($q);
+        
+        $matchStatement = '(%s%s) ';
+        
+        $retVal =  sprintf($matchStatement, $node, $labels) . $compwheres;
+        
+        return $retVal;                
+    }
+    
     /**
      * Prepare a query for MATCH using
      * collected $matches of type Relation.

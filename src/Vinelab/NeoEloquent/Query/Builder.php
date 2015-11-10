@@ -566,7 +566,8 @@ class Builder extends IlluminateQueryBuilder
         $relatedLabels = $related->getTable();
         $parentNode = $this->modelAsNode($parentLabels);
 
-        $this->matches[] = array(
+        array_push($this->matches,
+             array(
             'type' => 'Relation',
             'property' => $property,
             'direction' => $direction,
@@ -579,13 +580,26 @@ class Builder extends IlluminateQueryBuilder
                 'node' => $relatedNode,
                 'labels' => $relatedLabels,
             ),
-        );
+        ));
 
         $this->addBinding(array($this->wrap($property) => $value), 'matches');
 
         return $this;
     }
 
+    public function matchEarly($query) {
+        $labels = $query->getModel()->getTable();
+        $nodePlaceholder = $this->modelAsNode($labels);
+        $this->matches[] = [
+            'type'  => 'Early',
+            'property' => 'id',
+            'node' => $nodePlaceholder,
+            'labels' => $labels ,
+            'query' => $query->getQuery(),
+        ];
+        return $this;
+    }
+    
     public function matchMorphRelation($parent, $relatedNode, $property, $value = null, $direction = 'out')
     {
         $parentLabels = $parent->getTable();
