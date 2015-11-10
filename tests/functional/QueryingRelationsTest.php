@@ -7,6 +7,7 @@ use Mockery as M;
 use Carbon\Carbon;
 use Vinelab\NeoEloquent\Tests\TestCase;
 use Vinelab\NeoEloquent\Eloquent\Model;
+use Vinelab\NeoEloquent\Eloquent\SoftDeletes;
 
 class QueryingRelationsTest extends TestCase
 {
@@ -22,7 +23,7 @@ class QueryingRelationsTest extends TestCase
         $postNoComment = Post::create(['title' => 'I have no comments =(', 'body' => 'None!']);
         $postWithComment = Post::create(['title' => 'Nananana', 'body' => 'Commentmaaan']);
         $postWithTwoComments = Post::create(['title' => 'I got two']);
-        $postWithTenComments = Post::create(['tite' => 'Up yours posts, got 10 here']);
+        $postWithTenComments = Post::create(['title' => 'Up yours posts, got 10 here']);
 
         $comment = new Comment(['text' => 'food']);
         $postWithComment->comments()->save($comment);
@@ -58,6 +59,49 @@ class QueryingRelationsTest extends TestCase
         $this->assertEquals($postWithTenComments->toArray(), $postWithTen->first()->toArray());
     }
 
+    public function testQueryingHasCountDels()
+    {
+        $postNoComment = Post::create(['title' => 'I have no comments =(', 'body' => 'None!']);
+        $postWithComment = Post::create(['title' => 'Nananana', 'body' => 'Commentmaaan']);
+        $postWithTwoComments = Post::create(['title' => 'I got two']);
+        $postWithTenComments = Post::create(['title' => 'Up yours posts, got 10 here']);
+
+        $comment = new CommentDel(['text' => 'food']);
+        $postWithComment->commentDels()->save($comment);
+
+        // add two comments to $postWithTwoComments
+        for ($i = 0; $i < 2; ++$i) {
+            $postWithTwoComments->commentDels()->create(['text' => "Comment $i"]);
+        }
+        // add ten comments to $postWithTenComments
+        for ($i = 0; $i < 10; ++$i) {
+            $postWithTenComments->commentDels()->create(['text' => "Comment $i"]);
+        }
+
+        $cd = $postWithComment->commentDels()->first();
+        
+        $allPosts = Post::get();
+        $this->assertEquals(4, count($allPosts));
+
+        $posts = Post::has('commentDels')->get();
+        $this->assertEquals(3, count($posts));
+        $expectedHasComments = [$postWithComment->id, $postWithTwoComments->id, $postWithTenComments->id];
+        foreach ($posts as $key => $post) {
+            $this->assertTrue(in_array($post->id, $expectedHasComments));
+        }
+
+        $postsWithMoreThanOneComment = Post::has('commentDels', '>=', 2)->get();
+        $this->assertEquals(2, count($postsWithMoreThanOneComment));
+        $expectedWithMoreThanOne = [$postWithTwoComments->id, $postWithTenComments->id];
+        foreach ($postsWithMoreThanOneComment as $post) {
+            $this->assertTrue(in_array($post->id, $expectedWithMoreThanOne));
+        }
+
+        $postWithTen = Post::has('comments', '=', 10)->get();
+        $this->assertEquals(1, count($postWithTen));
+        $this->assertEquals($postWithTenComments->toArray(), $postWithTen->first()->toArray());
+    }
+    
     public function testQueryingWhereHasOne()
     {
         $mrAdmin = User::create(['name' => 'Rundala']);
@@ -760,6 +804,11 @@ class Post extends Model
     {
         return $this->hasMany('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\Comment', 'COMMENT');
     }
+    
+    public function commentDels()
+    {
+        return $this->hasMany('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\CommentDel', 'COMMENT_DEL');
+    }
 
     public function tags()
     {
@@ -797,5 +846,21 @@ class Comment extends Model
     public function post()
     {
         return $this->belongsTo('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\Post', 'COMMENT');
+    }
+}
+
+class CommentDel extends Model
+{
+    use SoftDeletes;
+    
+    protected $dates = ['deleted_at'];
+    
+    protected $label = 'CommentDel';
+
+    protected $fillable = ['text'];
+
+    public function post()
+    {
+        return $this->belongsTo('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\Post', 'COMMENT_DEL');
     }
 }
