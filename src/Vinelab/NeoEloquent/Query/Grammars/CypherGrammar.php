@@ -178,7 +178,6 @@ class CypherGrammar extends Grammar
         $property = $property == 'id' ? 'id('.$parent['node'].')' : $parent['node'].'.'.$property;
 
         return '('.$parent['node'].$parentLabels.'), '
-//                .$this->craftRelation($parent['node'], $relationshipLabel, $related['node'], $relatedLabels, $direction);
             . $this->craftRelation($parent['node'], $relationshipLabel, $related['node'], null, $direction);
     }
 
