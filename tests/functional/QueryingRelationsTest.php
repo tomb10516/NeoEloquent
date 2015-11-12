@@ -910,7 +910,7 @@ class Post extends Model
     // these are comments with soft deletes
     public function commentDels()
     {
-        return $this->hasMany('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\CommentDel', 'COMMENT');
+        return $this->hasMany('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\CommentDel', 'COMMENT_DEL');
     }
     
     public function tags()
@@ -958,12 +958,12 @@ class CommentDel extends Model {
 
     protected $dates = ['deleted_at'];
 
-    protected $label = 'Commentdel';
+    protected $label = 'CommentDel';
 
     protected $fillable = ['text'];
 
     public function post()
     {
-        return $this->belongsTo('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\PostDel', 'COMMENT');
+        return $this->belongsTo('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\PostDel', 'COMMENT_DEL');
     }
 }
