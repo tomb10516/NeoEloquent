@@ -427,6 +427,8 @@ class Builder extends IlluminateBuilder
     public function orderByHas($relation, $direction = 'asc', $operator = '>=', $count = 1, $boolean = 'and', Closure $callback = null) {
         $this->has($relation, $operator, $count, $boolean , $callback);
         $wheres = $this->getQuery()->wheres;
+        // the count column should always be the top of the stack because no other
+        // where statements should be processed between the call to has() and here
         $column = $wheres[count($wheres) - 1]['column'];
         $raw = true;
         $direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';
@@ -788,10 +790,6 @@ class Builder extends IlluminateBuilder
             $relation->getForeignKey(),
             $relation->getLocalKey(),
             $relation->getParentLocalKeyValue());
-
-//        // Prefix all the columns with the relation's node placeholder in the query
-//        // and merge the queries that needs to be merged.
-//        $this->prefixAndMerge($query, $prefix);
 
         /*
          * After that we've done everything we need with the Has() and related we need
