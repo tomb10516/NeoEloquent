@@ -883,9 +883,9 @@ MATCH (tag:`Tag`)
 WHERE id(tag) IN [1, 2]
 CREATE (post)-[:TAG]->(tag);
 ```
-### Order by Relation Count
+# Order by Relation Count
 
-# orderByHas()
+### orderByHas
 
 In graph databases it is a common need to order a result set by the count of a relationship.
 For example, if you have a message board with Posts that have Comments you might model
@@ -898,7 +898,7 @@ class Post extends Model
 
     public function comments()
     {
-        return $this->hasMany('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\Comment', 'COMMENT');
+        return $this->hasMany('Comment', 'COMMENT');
     }
 }
 
@@ -910,7 +910,7 @@ class Comment extends Model
 
     public function post()
     {
-        return $this->belongsTo('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\Post', 'COMMENT');
+        return $this->belongsTo('Post', 'COMMENT');
     }
 }
 
@@ -927,14 +927,14 @@ You can use much of the same syntax as you could with Post::has().  For example 
 with at least 10 comments, listed with most commented posts first you could write:
 
 ```php
-$moreThan10PostsSorted = Post::orderByHas('comments', 'desc', '>=', 2);
+$moreThan10PostsSorted = Post::orderByHas('comments', 'desc', '>=', 2)->get();
 ```
 
 Here is a typical real-world scenario for using orderByHas():  On your message board you want
 to list only the top 20 most commented posts.  You can do this with
 
 ```php
-$top20 = Post::orderByHas('comments', desc')->limit(20);
+$top20 = Post::orderByHas('comments', 'desc')->limit(20)->get();
 ```
 
 ## Migration
