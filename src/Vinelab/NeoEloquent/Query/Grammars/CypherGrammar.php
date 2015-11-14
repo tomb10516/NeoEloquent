@@ -120,34 +120,15 @@ class CypherGrammar extends Grammar
             return '';
         }
 
-//        $prepared = array();
-        $retval = "";
+        $cypher = "";
 
         foreach ($matches as $match) {
             $method = 'prepareMatch'.ucfirst($match['type']);
-//            $prepared[] = $this->$method($match);
             $prepared = $this->$method($match);
-            $retval .= "MATCH " . $prepared . ' ';
+            $cypher .= "MATCH " . $prepared . ' ';
         }
 
-//        return 'MATCH '.implode(', ', $prepared);
-        return $retval;
-    }
-
-     public function prepareMatchEarly(array $match) {
-        $node = $match['node'];
-        $labels = $this->prepareLabels($match['labels']);
-        $property = $match['property'];
-
-        $q = $match['query'];
-
-        $compwheres = $this->compileWheres($q);
-
-        $matchStatement = '(%s%s) ';
-
-        $retVal =  sprintf($matchStatement, $node, $labels) . $compwheres;
-
-        return $retVal;
+        return $cypher;
     }
     
     /**
@@ -178,6 +159,30 @@ class CypherGrammar extends Grammar
 
         return '('.$parent['node'].$parentLabels.'), '
             . $this->craftRelation($parent['node'], $relationshipLabel, $related['node'], null, $direction);
+    }
+    
+    /**
+     * Prepare a query for MATCH using
+     * collected $matches of type Early.
+     * @see \Vinelab\NeoEloquent\Eloquent\Query\Builder::matchEarly()
+     * @param array $match
+     *
+     * @return string
+     */
+    public function prepareMatchEarly(array $match) {
+        $node = $match['node'];
+        $labels = $this->prepareLabels($match['labels']);
+        $property = $match['property'];
+
+        $q = $match['query'];
+
+        $compwheres = $this->compileWheres($q);
+
+        $matchStatement = '(%s%s) ';
+
+        $cypher =  sprintf($matchStatement, $node, $labels) . $compwheres;
+
+        return $cypher;
     }
 
     /**
@@ -460,8 +465,6 @@ class CypherGrammar extends Grammar
 
     /**
      * Compile the "order by" portions of the query.
-       * If an order has the 'raw' property then its "column" will
-     * not be wrapped.  This is to support ordering by relationship.
      *
      * @param \Vinelab\NeoEloquent\Query\Builder $query
      * @param array                              $orders
@@ -470,13 +473,12 @@ class CypherGrammar extends Grammar
      */
     public function compileOrders(Builder $query, $orders)
     {
-//        return 'ORDER BY '.implode(', ', array_map(function ($order) {
-//                return $this->wrap($order['column']).' '.mb_strtoupper($order['direction']);
-//        }, $orders));
-        $retval = null;
-
-        $retval =  'ORDER BY '. implode(', ', array_map(function($order){
+        $cypher =  'ORDER BY '. implode(', ', array_map(function($order){
             $rv = null;
+                              // If an order has the 'raw' property then its "column" will
+     // not be wrapped.  This is to support ordering by  relations and
+     // aggrigates which have been prefixed in an earlier stage of
+     // compilation
             if (isset($order['raw']) && $order['raw']) {
                 $rv = $order['column'].' '.mb_strtoupper($order['direction']);
             } else {
@@ -486,7 +488,7 @@ class CypherGrammar extends Grammar
 
          }, $orders));
 
-        return $retval;
+        return $cypher;
     }
 
     /**

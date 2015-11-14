@@ -430,9 +430,14 @@ class Builder extends IlluminateBuilder
         // the count column should always be the top of the stack because no other
         // where statements should be processed between the call to has() and here
         $column = $wheres[count($wheres) - 1]['column'];
-        $raw = true;
+        // "raw" tells later steps of compilation that we don't want this column prefixed or modified
+        //  in any other way, we have given this column the exact name we want in the 
+        //  WITH and ORDER BY clauses
+        $raw = true; 
         $direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';
 
+        // adds to the $orders[] table what is needed to construct the clause in the form of
+        // ORDER BY $column 
         $this->getQuery()->orders[] = compact('column', 'direction', 'raw');
 
         return $this;
@@ -495,9 +500,16 @@ class Builder extends IlluminateBuilder
         return $this;
     }
 
-    public function matchEarly($query)
+    /**
+     * Add early matches to query
+     * 
+     * @see \Vinelab\NeoEloquent\Eloquent\Query\Builder::matchEarly()
+     * @param \Vinelab\NeoEloquent\Eloquent\Builder $model
+     * @return \Vinelab\NeoEloquent\Eloquent\Builder/static
+     */
+    public function matchEarly($model)
     {
-        $this->query->matchEarly($query);
+        $this->query->matchEarly($model);
 
         return $this;
     }
@@ -774,9 +786,12 @@ class Builder extends IlluminateBuilder
         $parentNode = $relation->getParentNode();
         $relatedNode = $relation->getRelatedNode();
         
-        // do early match here
+        // Prefix all the columns with the relation's node placeholder in the query
         $this->prefixWheres($query, $prefix);
+        // do "early match" here if  a carry (WITH) statement would otherwise block a 
+        // placeholder needed by a WHERE later on in the query.  Required for using soft deletes
         $this->matchEarly($query);
+        // merge bindings for the columns
         $this->query->mergeBindings($query->getQuery());
         
         // Tell the query to select our parent node only.
