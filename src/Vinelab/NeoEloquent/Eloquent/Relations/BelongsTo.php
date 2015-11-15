@@ -49,7 +49,9 @@ class BelongsTo extends OneRelation
             // Get the parent node's placeholder.
             $parentNode = $this->query->getQuery()->modelAsNode($this->parent->getTable());
             // Tell the query that we only need the related model returned.
-            $this->query->select($this->relation);
+                        $relatedLabels = $this->related->getTable();
+            $relatedPlaceholder = \Vinelab\NeoEloquent\Query\Grammars\Grammar::modelAsNodeStatic($relatedLabels);
+            $this->query->select($relatedPlaceholder);
             // Set the parent node's placeholder as the RETURN key.
             $this->query->getQuery()->from = array($parentNode);
             // Build the MATCH ()<-[]-() Cypher clause.
@@ -75,11 +77,14 @@ class BelongsTo extends OneRelation
         // Grab the parent node placeholder
         $parentNode = $this->query->getQuery()->modelAsNode($this->parent->getTable());
 
+                                $relatedLabels = $this->related->getTable();
+            $relatedPlaceholder = \Vinelab\NeoEloquent\Query\Grammars\Grammar::modelAsNodeStatic($relatedLabels);
+        
         // Tell the builder to select both models of the relationship
-        $this->query->select($this->relation, $parentNode);
+        $this->query->select($relatedPlaceholder, $parentNode);
 
         // Setup for their mutation so they don't breed weird stuff like... humans ?!
-        $this->query->addMutation($this->relation, $this->related);
+        $this->query->addMutation($relatedPlaceholder, $this->related);
         $this->query->addMutation($parentNode, $this->parent);
 
         // Set the parent node's placeholder as the RETURN key.

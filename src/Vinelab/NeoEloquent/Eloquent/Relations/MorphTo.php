@@ -41,7 +41,9 @@ class MorphTo extends OneRelation
             $parentNode = $this->query->getQuery()->modelAsNode($this->parent->getTable());
             // Tell the query that we need the morph model and the relationship represented by CypherGrammar
             // statically with 'r'.
-            $this->query->select($this->relation, 'r');
+                                $relatedLabels = $this->related->getTable();
+            $relatedPlaceholder = \Vinelab\NeoEloquent\Query\Grammars\Grammar::modelAsNodeStatic($relatedLabels);
+            $this->query->select($relatedPlaceholder, 'r');
             // Add morph mutation that will tell the parser about the property name on the Relationship that is holding
             // the class name of our morph model so that they can instantiate the correct one, and pass the relation
             // name as an indicator of the Node that has our morph attributes in the query.
@@ -66,7 +68,9 @@ class MorphTo extends OneRelation
         $parentNode = $this->query->getQuery()->modelAsNode($this->parent->getTable());
         // Tell the query that we need the morph model and the relationship represented by CypherGrammar
         // statically with 'r'.
-        $this->query->select('r', $parentNode, $this->relation);
+                            $relatedLabels = $this->related->getTable();
+            $relatedPlaceholder = \Vinelab\NeoEloquent\Query\Grammars\Grammar::modelAsNodeStatic($relatedLabels);
+        $this->query->select('r', $parentNode, $relatedPlaceholder);
         // Add morph mutation that will tell the parser about the property name on the Relationship that is holding
         // the class name of our morph model so that they can instantiate the correct one, and pass the relation
         // name as an indicator of the Node that has our morph attributes in the query.

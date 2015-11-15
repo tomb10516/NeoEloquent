@@ -132,10 +132,14 @@ class BelongsToMany extends HasOneOrMany
         $parentNode = $this->query->getQuery()->modelAsNode($this->parent->getTable());
 
         // Tell the builder to select both models of the relationship
-        $this->query->select($this->relation, $parentNode);
+                            $relatedLabels = $this->related->getTable();
+        $relatedPlaceholder = \Vinelab\NeoEloquent\Query\Grammars\Grammar::modelAsNodeStatic($relatedLabels);
+        $this->query->select($relatedPlaceholder, $parentNode); // BOOKMARK
+
+//            $this->query->select($relatedPlaceholder);
 
         // Setup for their mutation so they don't breed weird stuff like... humans ?!
-        $this->query->addManyMutation($this->relation, $this->related);
+        $this->query->addManyMutation($relatedPlaceholder, $this->related);
         $this->query->addManyMutation($parentNode, $this->parent);
 
         // Set the parent node's placeholder as the RETURN key.

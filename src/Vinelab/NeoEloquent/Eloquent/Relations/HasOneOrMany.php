@@ -302,7 +302,7 @@ abstract class HasOneOrMany extends IlluminateHasOneOrMany implements RelationIn
             $this->query->select($relatedPlaceholder);
             
             // Set the parent node's placeholder as the RETURN key.
-            $this->query->getQuery()->from = array($this->relation);
+            $this->query->getQuery()->from = array($relatedPlaceholder);
             // Build the MATCH ()-[]->() Cypher clause.
             $this->query->matchOut($this->parent, $this->related, $this->relation, $this->foreignKey, $this->localKey, $this->parent->{$this->localKey});
             // Add WHERE clause over the parent node's matching key = value.

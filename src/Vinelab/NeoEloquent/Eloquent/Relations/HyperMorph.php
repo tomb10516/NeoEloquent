@@ -85,7 +85,10 @@ class HyperMorph extends BelongsToMany
             // Get the parent node's placeholder.
             $parentNode = $this->getParentNode();
             // Tell the query that we only need the related model returned.
-            $this->query->select($this->relation);
+                        $relatedLabels = $this->related->getTable();
+            $relatedPlaceholder = \Vinelab\NeoEloquent\Query\Grammars\Grammar::modelAsNodeStatic($relatedLabels);
+            $this->query->select($relatedPlaceholder);
+            
             // Set the parent node's placeholder as the RETURN key.
             $this->query->getQuery()->from = array($parentNode);
             // Build the MATCH ()-[]->() Cypher clause.
@@ -112,7 +115,9 @@ class HyperMorph extends BelongsToMany
         $parentNode = $this->query->getQuery()->modelAsNode($this->parent->getTable());
 
         // Tell the builder to select both models of the relationship
-        $this->query->select($this->relation, $parentNode);
+                    $relatedLabels = $this->related->getTable();
+            $relatedPlaceholder = \Vinelab\NeoEloquent\Query\Grammars\Grammar::modelAsNodeStatic($relatedLabels);
+        $this->query->select($relatedPlaceholder, $parentNode);
 
         // Setup for their mutation so they don't breed weird stuff like... humans ?!
         $this->query->addManyMutation($this->relation, $this->related);
