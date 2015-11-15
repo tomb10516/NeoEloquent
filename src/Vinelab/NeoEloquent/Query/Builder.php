@@ -702,7 +702,8 @@ class Builder extends IlluminateQueryBuilder
         $parentLabels = $parent->getTable();
         $relatedLabels = $related->getTable();
         $parentNode = $this->modelAsNode($parentLabels);
-
+        $relatedNode = $this->modelAsNode($relatedLabels);
+        
         $newMatch = [
             'type' => 'Relation',
             'property' => $property,
@@ -722,6 +723,7 @@ class Builder extends IlluminateQueryBuilder
             // relation matches go at the end of match array, node matches go at the front
             array_push($this->matches, $newMatch);
             $this->matchEarly($parent);
+            $this->matchEarly($related);
             $this->addBinding(array($this->wrap($property) => $value), 'matches');
         }
 

@@ -15,7 +15,6 @@ class Grammar extends IlluminateGrammar
      * @var Vinelab\NeoEloquent\Query\Builder
      */
     protected $query;
-
     protected $labelPostfix = '_neoeloquent_';
 
     /**
@@ -31,7 +30,6 @@ class Grammar extends IlluminateGrammar
         // Validate whether the requested field is the
         // node id, in that case id(n) doesn't work as
         // a placeholder so we transform it to the id replacement instead.
-
         // When coming from a WHERE statement we'll have to pluck out the column
         // from the collected attributes.
         if (is_array($value) && isset($value['binding'])) {
@@ -192,7 +190,6 @@ class Grammar extends IlluminateGrammar
             }
 
             return $value;
-
         }, $values);
 
         // stringify them.
@@ -210,6 +207,24 @@ class Grammar extends IlluminateGrammar
      * @return string
      */
     public function modelAsNode($labels = null, $relation = null)
+    {
+        if (is_null($labels)) {
+            return 'n';
+        } elseif (is_array($labels)) {
+            $labels = reset($labels);
+        }
+
+        // When this is a related node we'll just prepend it with 'with_' that way we avoid
+        // clashing node models in the cases like using recursive model relations.
+        // @see https://github.com/Vinelab/NeoEloquent/issues/7
+        if (!is_null($relation)) {
+            $labels = 'with_'.$relation.'_'.$labels;
+        }
+
+        return mb_strtolower($labels);
+    }
+
+    public static function modelAsNodeStatic($labels = null, $relation = null)
     {
         if (is_null($labels)) {
             return 'n';

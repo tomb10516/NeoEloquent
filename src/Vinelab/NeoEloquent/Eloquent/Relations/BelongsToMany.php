@@ -104,7 +104,8 @@ class BelongsToMany extends HasOneOrMany
             // Get the parent node's placeholder.
             $parentNode = $this->getParentNode();
             // Tell the query that we only need the related model returned.
-            $this->query->select($this->relation);
+            $this->query->select($parentNode);
+            
             // Set the parent node's placeholder as the RETURN key.
             $this->query->getQuery()->from = array($parentNode);
             // Build the MATCH ()-[]->() Cypher clause.
