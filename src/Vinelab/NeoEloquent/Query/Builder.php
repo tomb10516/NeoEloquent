@@ -71,12 +71,12 @@ class Builder extends IlluminateQueryBuilder
     );
 
     /**
-     * Some operators take only one argument (the column)
+     * Some operators take only one argument (the column).
      */
     protected $unaryOperators = array(
-        'is null', 'is not null'
+        'is null', 'is not null',
     );
-    
+
     /**
      * Create a new query builder instance.
      *
@@ -233,111 +233,101 @@ class Builder extends IlluminateQueryBuilder
     }
 
     /**
-	 * Add a where clause for an edge property
+     * Add a where clause for an edge property.
      * 
      * Note that nesting is not supported
-	 *
-	 * @param  string  $column
-	 * @param  string  $operator
-	 * @param  mixed   $value
-	 * @param  string  $boolean
-	 * @return \Illuminate\Database\Query\Builder|static
-	 *
-	 * @throws \InvalidArgumentException
-	 */
-	public function whereRel($column, $operator = null, $value = null, $boolean = 'and')
-	{
+     *
+     * @param string $column
+     * @param string $operator
+     * @param mixed  $value
+     * @param string $boolean
+     *
+     * @return \Illuminate\Database\Query\Builder|static
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function whereRel($column, $operator = null, $value = null, $boolean = 'and')
+    {
         // First we check whether the operator is 'IN' so that we call whereIn() on it
         // as a helping hand and centralization strategy, whereIn knows what to do with the IN operator.
-        if (mb_strtolower($operator) == 'in')
-        {
+        if (mb_strtolower($operator) == 'in') {
             return $this->whereIn($column, $value, $boolean);
         }
 
         // FIXME: untested
         // If the column is an array, we will assume it is an array of key-value pairs
-		// and can add them each as a where clause. We will maintain the boolean we
-		// received when the method was called and pass it into the nested where.
-		if (is_array($column))
-		{
-			return $this->whereNested(function(IlluminateQueryBuilder $query) use ($column)
-			{
-				foreach ($column as $key => $value)
-				{
-					$query->where($key, '=', $value);
-				}
-			}, $boolean);
-		}
+        // and can add them each as a where clause. We will maintain the boolean we
+        // received when the method was called and pass it into the nested where.
+        if (is_array($column)) {
+            return $this->whereNested(function (IlluminateQueryBuilder $query) use ($column) {
+                foreach ($column as $key => $value) {
+                    $query->where($key, '=', $value);
+                }
+            }, $boolean);
+        }
 
         if (!in_array(mb_strtolower($operator), $this->unaryOperators, true)) {
-		if (func_num_args() == 2)
-		{
-			list($value, $operator) = array($operator, '=');
-		}
-		elseif ($this->invalidOperatorAndValue($operator, $value))
-		{
-			throw new \InvalidArgumentException("Value must be provided.");
-		}
+            if (func_num_args() == 2) {
+                list($value, $operator) = array($operator, '=');
+            } elseif ($this->invalidOperatorAndValue($operator, $value)) {
+                throw new \InvalidArgumentException('Value must be provided.');
+            }
         }
-        
-		// If the given operator is not found in the list of valid operators we will
-		// assume that the developer is just short-cutting the '=' operators and
-		// we will set the operators to '=' and set the values appropriately.
-		if ( ! in_array(mb_strtolower($operator), $this->operators, true))
-		{
-			list($value, $operator) = array($operator, '=');
-		}
+
+        // If the given operator is not found in the list of valid operators we will
+        // assume that the developer is just short-cutting the '=' operators and
+        // we will set the operators to '=' and set the values appropriately.
+        if (!in_array(mb_strtolower($operator), $this->operators, true)) {
+            list($value, $operator) = array($operator, '=');
+        }
 
         $type = 'Relation';
-        
-		// If the value is "null", we will just assume the developer wants to add a
-		// where null clause to the query. So, we will allow a short-cut here to
-		// that method for convenience so the developer doesn't have to check.
-		if (is_null($value))
-		{
+
+        // If the value is "null", we will just assume the developer wants to add a
+        // where null clause to the query. So, we will allow a short-cut here to
+        // that method for convenience so the developer doesn't have to check.
+        if (is_null($value)) {
             if ($operator != '=') {
                 $operator = 'IS NOT NULL';
             } else {
                 $operator = 'IS NULL';
             }
             $this->wheres[] = compact('type', 'binding', 'column', 'operator', 'value', 'boolean');
-		} else {
+        } else {
 
 // FIXME - test
         // When the column is an id we need to treat it as a graph db id and transform it
         // into the form of id(n) and the typecast the value into int.
-        if ($column == 'id')
-        {
-            $column = 'id('. $this->modelAsNode() .')';
+        if ($column == 'id') {
+            $column = 'id('.$this->modelAsNode().')';
             $value = intval($value);
         }
         // When it's been already passed in the form of NodeLabel.id we'll have to
         // re-format it into id(NodeLabel)
-        elseif (preg_match('/^.*\.id$/', $column))
-        {
+        elseif (preg_match('/^.*\.id$/', $column)) {
             $parts = explode('.', $column);
             $column = sprintf('%s(%s)', $parts[1], $parts[0]);
             $value = intval($value);
         }
         // Also if the $column is already a form of id(n) we'd have to type-cast the value into int.
-        elseif (preg_match('/^id\(.*\)$/', $column)) $value = intval($value);
-
-        $binding = $this->prepareBindingColumn($column);
-
-        $this->wheres[] = compact('type', 'binding', 'column', 'operator', 'value', 'boolean');
-
-        $property = $this->wrap($binding);
-
-        if ( ! $value instanceof Expression)
-        {
-			$this->addBinding([$property => $value], 'where');
-		}
-
+        elseif (preg_match('/^id\(.*\)$/', $column)) {
+            $value = intval($value);
         }
-        
-		return $this;
-	}
-    
+
+            $binding = $this->prepareBindingColumn($column);
+
+            $this->wheres[] = compact('type', 'binding', 'column', 'operator', 'value', 'boolean');
+
+            $property = $this->wrap($binding);
+
+            if (!$value instanceof Expression) {
+                $this->addBinding([$property => $value], 'where');
+            }
+        }
+
+        return $this;
+    }
+
     /**
      * Add a basic where clause to the query.
      *
@@ -713,8 +703,6 @@ class Builder extends IlluminateQueryBuilder
         $relatedLabels = $related->getTable();
         $parentNode = $this->modelAsNode($parentLabels);
 
-
-
         $newMatch = [
             'type' => 'Relation',
             'property' => $property,
@@ -727,7 +715,7 @@ class Builder extends IlluminateQueryBuilder
             'related' => [
                 'node' => $relatedNode,
                 'labels' => $relatedLabels,
-            ]
+            ],
         ];
 
         if (!in_array($this->matches, $newMatch)) {
@@ -766,7 +754,7 @@ class Builder extends IlluminateQueryBuilder
             if ($existingMatch['type'] == $newMatch['type'] &&
                 $existingMatch['property'] == $newMatch['property'] &&
                 $existingMatch['node'] == $newMatch['node'] &&
-                $existingMatch['labels'] == $newMatch['labels']                
+                $existingMatch['labels'] == $newMatch['labels']
             ) {
                 return $this;
             }

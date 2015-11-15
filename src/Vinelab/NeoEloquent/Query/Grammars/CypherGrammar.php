@@ -341,40 +341,39 @@ class CypherGrammar extends Grammar
 
     protected function whereRelation(Builder $query, $where)
     {
-        if ($where['operator'] == "IS NULL" || $where['operator'] == "IS NOT NULL") {
-            $value = "";
+        if ($where['operator'] == 'IS NULL' || $where['operator'] == 'IS NOT NULL') {
+            $value = '';
         } else {
             $value = $this->parameter($where);
         }
-        
+
         $match = null;
         // get the relationship match so we can give the column the appropriate prefix
         // also make sure only one relationship match existsin the query
-        foreach($this->query->matches as $m) {
+        foreach ($this->query->matches as $m) {
             if ($m['type'] == 'Relation') {
                 if ($match == null) {
                     $match = $m;
                 } else {
                     throw new \Vinelab\NeoEloquent\Exceptions\Exception(
-                        "not yet implemented - whereRelation does not yet support querries with multiple relations");
+                        'not yet implemented - whereRelation does not yet support querries with multiple relations');
                 }
             }
         }
         if (!$match) {
             throw new \Vinelab\NeoEloquent\Exceptions\Exception(
-                "whereRelation requires a relation in the query");
+                'whereRelation requires a relation in the query');
         }
-        
-        $related       = $match['related'];
-        $relationship  = $match['relationship'];
+
+        $related = $match['related'];
+        $relationship = $match['relationship'];
 
         // Get the relationship ready for query
         $relationshipVar = $this->prepareRelationVar($relationship, $related['node']);
-       
-        
-        return $relationshipVar . '.' . $where['column'].' '.$where['operator'].' '.$value;
+
+        return $relationshipVar.'.'.$where['column'].' '.$where['operator'].' '.$value;
     }
-    
+
     /**
      * Compiled a WHERE clause with carried identifiers.
      *

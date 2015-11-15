@@ -11,7 +11,6 @@ use Vinelab\NeoEloquent\Eloquent\SoftDeletes;
 
 class QueryingRelationsTest extends TestCase
 {
-
     public function tearDown()
     {
         M::close();
@@ -825,12 +824,12 @@ class QueryingRelationsTest extends TestCase
 
         $this->assertEquals($acme, $found);
     }
-    
+
     public function testFilterRelationPropertiesBinaryOps()
     {
-        $organization = Organization::create(['name' => "cOrg"]);
-        for ($i = 0; $i < 4; $i++) {
-            $user = User::create(['name' => 'user' . $i]);
+        $organization = Organization::create(['name' => 'cOrg']);
+        for ($i = 0; $i < 4; ++$i) {
+            $user = User::create(['name' => 'user'.$i]);
             $organization->members()->save($user);
             $membershipRelation = $organization->members()->edge($user);
             if ($i < 2) {
@@ -847,12 +846,12 @@ class QueryingRelationsTest extends TestCase
             $this->assertEquals('active', $membershipEdge->status);
         }
     }
-    
+
     public function testFilterRelationPropertiesWithNullValue()
     {
-        $organization = Organization::create(['name' => "cOrg"]);
-        for ($i = 0; $i < 4; $i++) {
-            $user = User::create(['name' => 'user' . $i]);
+        $organization = Organization::create(['name' => 'cOrg']);
+        for ($i = 0; $i < 4; ++$i) {
+            $user = User::create(['name' => 'user'.$i]);
             $organization->members()->save($user);
             $membershipRelation = $organization->members()->edge($user);
             if ($i < 2) {
@@ -873,16 +872,15 @@ class QueryingRelationsTest extends TestCase
             $this->assertNotNull($membershipEdge->status);
         }
     }
-    
+
     /**
      * @expectedException Vinelab\NeoEloquent\Exceptions\Exception
      */
     public function testFilterRelationPropertiesNoRelation()
     {
-        $organization = Organization::create(['name' => "cOrg"]);
+        $organization = Organization::create(['name' => 'cOrg']);
         $activeMembers = $organization->whereRel('status', '=', 'active')->get();
     }
-    
 
     public function testSavingCreateWithRelationWithDateTimeAndCarbonInstances()
     {
@@ -1059,21 +1057,18 @@ class Tag extends Model
 {
     protected $label = 'Tag';
     protected $fillable = ['title'];
-
 }
 
 class Photo extends Model
 {
     protected $label = 'Photo';
     protected $fillable = ['url', 'caption', 'metadata'];
-
 }
 
 class Video extends Model
 {
     protected $label = 'Video';
     protected $fillable = ['title', 'description', 'stream_url', 'thumbnail'];
-
 }
 
 class Comment extends Model
@@ -1089,7 +1084,6 @@ class Comment extends Model
 
 class CommentDel extends Model
 {
-
     use SoftDeletes;
     protected $dates = ['deleted_at'];
     protected $label = 'CommentDel';
