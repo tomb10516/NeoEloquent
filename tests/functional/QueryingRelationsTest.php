@@ -82,7 +82,7 @@ class QueryingRelationsTest extends TestCase
         $comment->delete();
         
         $posts = Post::has('commentDels')->get();
-        $this->assertEquals(3, count($posts));
+        $this->assertEquals(2, count($posts));
         $expectedHasComments = [$postWithTwoComments->id, $postWithTenComments->id];
         foreach ($posts as $key => $post) {
             $this->assertTrue(in_array($post->id, $expectedHasComments));

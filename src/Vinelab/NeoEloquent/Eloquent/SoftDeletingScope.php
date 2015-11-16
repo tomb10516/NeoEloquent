@@ -40,7 +40,7 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
 //        $builder->carry([$foo . "." . $model->getQualifiedDeletedAtColumn() => $foo . "_" . $model->getQualifiedDeletedAtColumn()]);
 //        $this->extend($builder);
 //        $builder->whereCarried($model->getQualifiedDeletedAtColumn(), "IS", "NULL");
-        $builder->whereSoftDeleted('node', $builder->getQuery()->modelAsNode($model->getTable()), $model->getQualifiedDeletedAtColumn(), 'and', true);
+        $builder->whereSoftDeleted('node', $builder->getQuery()->modelAsNode($model->getTable()), $model->getQualifiedDeletedAtColumn(), 'and', false);
         $builder->carry([$model->getQualifiedDeletedAtColumn() => $model->getQualifiedDeletedAtColumn()]);
         $this->extend($builder);
     }

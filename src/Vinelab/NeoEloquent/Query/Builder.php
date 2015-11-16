@@ -813,6 +813,12 @@ class Builder extends IlluminateQueryBuilder
         $this->bindings['where'] = array_merge_recursive($this->bindings['where'], (array) $bindings);
     }
 
+    public function mergeWith($with, $bindings)
+    {
+        $this->with = array_merge((array) $this->with, (array) $with);
+//        $this->bindings['where'] = array_merge_recursive($this->bindings['where'], (array) $bindings);
+    }
+
     public function wrap($property)
     {
         return $this->grammar->getIdReplacement($property);

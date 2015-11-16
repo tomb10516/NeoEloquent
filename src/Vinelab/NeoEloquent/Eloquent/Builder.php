@@ -715,7 +715,7 @@ class Builder extends IlluminateBuilder
         $prefix = $relation->getRelatedNode();
 
         // BOOKMARK - prefix soft delete here?
-        
+
         if (!$callback) {
             /*
              * The Cypher we're trying to build here would look like this:
@@ -901,6 +901,17 @@ class Builder extends IlluminateBuilder
     protected function prefixAndMerge(Builder $query, $prefix)
     {
         $this->prefixWheres($query, $prefix);
+
+        foreach ($query->getQuery()->with as $key => $value) {
+//            $query->getQuery()->with[$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
+//            $query->getQuery()->with[$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
+            unset($query->getQuery()->with[$key]);
+            $query->getQuery()->with[$prefix.".".$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
+        }
+
+        $this->query->mergeWith($query->getQuery()->with, $query->getQuery()->getBindings());
+
+
         $this->query->mergeWheres($query->getQuery()->wheres, $query->getQuery()->getBindings());
     }
 
