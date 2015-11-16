@@ -5,23 +5,27 @@ namespace Vinelab\NeoEloquent\Tests\Functional\Relations\BelongsToMany;
 use Mockery as M;
 use Vinelab\NeoEloquent\Tests\TestCase;
 use Vinelab\NeoEloquent\Eloquent\Model;
+use Vinelab\NeoEloquent\Eloquent\SoftDeletes;
 
 class User extends Model
 {
     protected $label = 'Individual';
-
     protected $fillable = ['name'];
 
     public function roles()
     {
         return $this->belongsToMany('Vinelab\NeoEloquent\Tests\Functional\Relations\BelongsToMany\Role', 'HAS_ROLE');
     }
+
+    public function rolesSoftDel()
+    {
+        return $this->belongsToMany('Vinelab\NeoEloquent\Tests\Functional\Relations\BelongsToMany\RoleSD', 'HAS_ROLE_SD');
+    }
 }
 
 class Role extends Model
 {
     protected $label = 'Role';
-
     protected $fillable = ['title'];
 
     public function users()
@@ -30,17 +34,35 @@ class Role extends Model
     }
 }
 
+class RoleSD extends Model
+{
+    use SoftDeletes;
+    
+    protected $label = 'RoleSD';
+    protected $fillable = ['title'];
+
+    public function users()
+    {
+        return $this->belongsToMany('Vinelab\NeoEloquent\Tests\Functional\Relations\BelongsToMany\User', 'HAS_ROLE_SD');
+    }
+}
+
 class BelongsToManyRelationTest extends TestCase
 {
+
     public function tearDown()
     {
         M::close();
 
         $users = User::all();
-        $users->each(function ($u) { $u->delete(); });
+        $users->each(function ($u) {
+            $u->delete();
+        });
 
         $roles = Role::all();
-        $roles->each(function ($r) { $r->delete(); });
+        $roles->each(function ($r) {
+            $r->delete();
+        });
 
         parent::tearDown();
     }
@@ -208,7 +230,9 @@ class BelongsToManyRelationTest extends TestCase
         $this->assertInstanceOf('Illuminate\Database\Eloquent\Collection', $edges);
         $this->assertCount(3, $edges->toArray());
 
-        $edges->each(function ($edge) { $edge->delete(); });
+        $edges->each(function ($edge) {
+            $edge->delete();
+        });
     }
 
     public function testSyncingModelIds()
@@ -224,7 +248,9 @@ class BelongsToManyRelationTest extends TestCase
 
         $edges = $user->roles()->edges();
 
-        $edgesIds = array_map(function ($edge) { return $edge->getRelated()->getKey(); }, $edges->toArray());
+        $edgesIds = array_map(function ($edge) {
+            return $edge->getRelated()->getKey();
+        }, $edges->toArray());
 
         $this->assertTrue(in_array($admin->id, $edgesIds));
         $this->assertTrue(in_array($editor->id, $edgesIds));
@@ -248,7 +274,9 @@ class BelongsToManyRelationTest extends TestCase
 
         $edges = $user->roles()->edges();
 
-        $edgesIds = array_map(function ($edge) { return $edge->getRelated()->getKey(); }, $edges->toArray());
+        $edgesIds = array_map(function ($edge) {
+            return $edge->getRelated()->getKey();
+        }, $edges->toArray());
 
         $this->assertTrue(in_array($admin->id, $edgesIds));
         $this->assertTrue(in_array($editor->id, $edgesIds));
@@ -276,7 +304,9 @@ class BelongsToManyRelationTest extends TestCase
 
         $edges = $user->roles()->edges();
 
-        $edgesIds = array_map(function ($edge) { return $edge->getRelated()->getKey(); }, $edges->toArray());
+        $edgesIds = array_map(function ($edge) {
+            return $edge->getRelated()->getKey();
+        }, $edges->toArray());
 
         // count the times that $master->id exists, it it were more than 1 then the relationship hasn't been updated,
         // instead it was duplicated
@@ -311,7 +341,9 @@ class BelongsToManyRelationTest extends TestCase
             $this->assertGreaterThan(0, $role->id);
         }
 
-        $user->roles()->edges()->each(function ($edge) { $edge->delete(); });
+        $user->roles()->edges()->each(function ($edge) {
+            $edge->delete();
+        });
     }
 
     public function testEagerLoadingBelongsToMany()
@@ -330,7 +362,9 @@ class BelongsToManyRelationTest extends TestCase
         $this->assertArrayHasKey('roles', $relations);
         $this->assertCount(3, $relations['roles']);
 
-        $edges->each(function ($relation) { $relation->delete(); });
+        $edges->each(function ($relation) {
+            $relation->delete();
+        });
     }
 
     /**
@@ -419,8 +453,8 @@ class BelongsToManyRelationTest extends TestCase
         $this->assertEquals(3, count($user->roles), 'relations created successfully');
 
         $deleted = $fetched->whereHas('roles', function ($q) {
-            $q->where('title', 'Master');
-        })->delete();
+                $q->where('title', 'Master');
+            })->delete();
 
         $this->assertTrue($deleted);
 
@@ -435,6 +469,43 @@ class BelongsToManyRelationTest extends TestCase
         $this->assertEquals($admin->toArray(), $adminDeleted->toArray());
 
         $editorDeleted = Role::find($editor->getKey());
+        $this->assertEquals($editor->toArray(), $editorDeleted->toArray());
+    }
+
+    /**
+     * Regression for issue #120.
+     *
+     * @see https://github.com/Vinelab/NeoEloquent/issues/120
+     */
+    public function testDeletingModelBelongsToManyWithWhereHasRelationWithSoftDeletes()
+    {
+        $user = User::create(['name' => 'Creepy Dude']);
+        $master = RoleSD::create(['title' => 'Master']);
+        $admin = RoleSD::create(['title' => 'Admin']);
+        $editor = RoleSD::create(['title' => 'Editor']);
+
+        $edges = $user->rolesSoftDel()->attach([$master, $admin, $editor]);
+
+        $fetched = User::find($user->getKey());
+        $this->assertEquals(3, count($user->rolesSoftDel), 'relations created successfully');
+
+        $deleted = $fetched->whereHas('rolesSoftDel', function ($q) {
+                $q->where('title', 'Master');
+            })->delete();
+
+        $this->assertTrue($deleted);
+
+        $again = User::find($user->getKey());
+        $this->assertNull($again);
+
+        // roles should've been deleted too.
+        $masterDeleted = RoleSD::find($master->getKey());
+        $this->assertEquals($master->toArray(), $masterDeleted->toArray());
+
+        $adminDeleted = RoleSD::find($admin->getKey());
+        $this->assertEquals($admin->toArray(), $adminDeleted->toArray());
+
+        $editorDeleted = RoleSD::find($editor->getKey());
         $this->assertEquals($editor->toArray(), $editorDeleted->toArray());
     }
 }
