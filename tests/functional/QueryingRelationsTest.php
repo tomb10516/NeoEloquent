@@ -78,9 +78,12 @@ class QueryingRelationsTest extends TestCase
         }
         $allPosts = Post::get();
         $this->assertEquals(4, count($allPosts));
+        
+        $postWithComment->commentDels()->first()->delete();
+        
         $posts = Post::has('commentDels')->get();
         $this->assertEquals(3, count($posts));
-        $expectedHasComments = [$postWithComment->id, $postWithTwoComments->id, $postWithTenComments->id];
+        $expectedHasComments = [$postWithTwoComments->id, $postWithTenComments->id];
         foreach ($posts as $key => $post) {
             $this->assertTrue(in_array($post->id, $expectedHasComments));
         }
@@ -90,7 +93,7 @@ class QueryingRelationsTest extends TestCase
         foreach ($postsWithMoreThanOneComment as $post) {
             $this->assertTrue(in_array($post->id, $expectedWithMoreThanOne));
         }
-        $postWithTen = Post::has('comments', '=', 10)->get();
+        $postWithTen = Post::has('commentDels', '=', 10)->get();
         $this->assertEquals(1, count($postWithTen));
         $this->assertEquals($postWithTenComments->toArray(), $postWithTen->first()->toArray());
     }

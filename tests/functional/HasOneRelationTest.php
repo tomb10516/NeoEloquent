@@ -5,6 +5,7 @@ namespace Vinelab\NeoEloquent\Tests\Functional\Relations\HasOne;
 use Mockery as M;
 use Vinelab\NeoEloquent\Tests\TestCase;
 use Vinelab\NeoEloquent\Eloquent\Model;
+use Vinelab\NeoEloquent\Eloquent\SoftDeletes;
 
 class User extends Model
 {
@@ -15,17 +16,32 @@ class User extends Model
     {
         return $this->hasOne('Vinelab\NeoEloquent\Tests\Functional\Relations\HasOne\Profile', 'PROFILE');
     }
+
+    public function profileSD()
+    {
+        return $this->hasOne('Vinelab\NeoEloquent\Tests\Functional\Relations\HasOne\ProfileSD', 'PROFILE_SOFT_DELETE');
+    }
 }
 
 class Profile extends Model
 {
     protected $label = 'Profile';
-
     protected $fillable = ['guid', 'service'];
+
+}
+
+class ProfileSD extends Model
+{
+
+    use SoftDeletes;
+    protected $label = 'ProfileSD';
+    protected $fillable = ['guid', 'service'];
+
 }
 
 class HasOneRelationTest extends TestCase
 {
+
     public function tearDown()
     {
         M::close();
@@ -226,8 +242,26 @@ class HasOneRelationTest extends TestCase
 
         // fetch user and relation by specific query
         $deleted = User::whereHas('profile', function ($q) {
-            $q->where('service', 'Orc');
-        })->delete();
+                $q->where('service', 'Orc');
+            })->delete();
+
+        $this->assertTrue($deleted);
+
+        $fetched = User::find($user->getKey());
+        $this->assertNull($fetched);
+    }
+
+    public function testDeletingModelHasOneWithWhereHasRelationSD()
+    {
+        $user = User::create(['name' => 'Hrard', ' email' => 'hrar@d.n']);
+        $profile = ProfileSD::create(['guid' => uniqid(), 'service' => 'Orc']);
+
+        $user->profileSD()->save($profile);
+
+        // fetch user and relation by specific query
+        $deleted = User::whereHas('profileSD', function ($q) {
+                $q->where('service', 'Orc');
+            })->delete();
 
         $this->assertTrue($deleted);
 
