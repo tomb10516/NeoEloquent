@@ -79,7 +79,7 @@ class QueryingRelationsTest extends TestCase
         $allPosts = Post::get();
         $this->assertEquals(4, count($allPosts));
         
-        $postWithComment->commentDels()->first()->delete();
+        $comment->delete();
         
         $posts = Post::has('commentDels')->get();
         $this->assertEquals(3, count($posts));

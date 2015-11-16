@@ -14,7 +14,7 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
      */
     protected $extensions = ['ForceDelete', 'Restore', 'WithTrashed', 'OnlyTrashed'];
 
-        /**
+    /**
      * Add a WHERE statement with carried identifier to the query.
      *
      * @param string $column
@@ -25,7 +25,7 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
      * @return \Illuminate\Database\Query\Builder|static
      */
 //    public function whereCarried($column, $operator = null, $value = null, $boolean = 'and')
-    
+
     /**
      * Apply the scope to a given Eloquent query builder.
      *
@@ -35,9 +35,13 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
      */
     public function apply(IlluminateBuilder $builder, IlluminateModel $model)
     {
-        $foo = $builder->getQuery()->modelAsNode($model->getTable());
-        $builder->whereCarried($foo . "_" . $model->getQualifiedDeletedAtColumn(), "IS", "NULL");
-        $builder->carry([$foo . "." . $model->getQualifiedDeletedAtColumn() => $foo . "_" . $model->getQualifiedDeletedAtColumn()]);
+//        $foo = $builder->getQuery()->modelAsNode($model->getTable());
+//        $builder->whereCarried($foo . "_" . $model->getQualifiedDeletedAtColumn(), "IS", "NULL");
+//        $builder->carry([$foo . "." . $model->getQualifiedDeletedAtColumn() => $foo . "_" . $model->getQualifiedDeletedAtColumn()]);
+//        $this->extend($builder);
+//        $builder->whereCarried($model->getQualifiedDeletedAtColumn(), "IS", "NULL");
+        $builder->whereSoftDeleted($model->getQualifiedDeletedAtColumn(), 'and', true);
+        $builder->carry([$model->getQualifiedDeletedAtColumn() => $model->getQualifiedDeletedAtColumn()]);
         $this->extend($builder);
     }
 
@@ -55,8 +59,8 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
         $query = $builder->getQuery();
 
         $query->wheres = collect($query->wheres)->reject(function ($where) use ($column) {
-            return $this->isSoftDeleteConstraint($where, $column);
-        })->values()->all();
+                return $this->isSoftDeleteConstraint($where, $column);
+            })->values()->all();
     }
 
     /**
@@ -75,7 +79,7 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
             $column = $this->getDeletedAtColumn($builder);
 
             return $builder->update([
-                $column => $builder->getModel()->freshTimestampString(),
+                    $column => $builder->getModel()->freshTimestampString(),
             ]);
         });
     }

@@ -412,6 +412,33 @@ class Builder extends IlluminateQueryBuilder
         return $this;
     }
 
+        /**
+     * Add a "where null" clause to the query.
+     *
+     * @param string $column
+     * @param string $boolean
+     * @param bool   $not
+     *
+     * @return \Illuminate\Database\Query\Builder|static
+     */
+    public function WhereSoftDeleted($column, $boolean = 'and', $not = false)
+    {
+//        $type = $not ? 'NotNull' : 'Null';
+        $type = 'SoftDeleted';
+        $operator = $not ? 'IS NOT NULL' : 'IS NULL';
+
+        if ($column == 'id') {
+            $column = 'id('.$this->modelAsNode().')';
+        }
+
+//        $binding = $this->prepareBindingColumn($column);
+        $binding = null;
+
+        $this->wheres[] = compact('type', 'column', 'operator', 'boolean', 'binding');
+
+        return $this;
+    }
+    
     /**
      * Add a WHERE statement with carried identifier to the query.
      *

@@ -908,7 +908,10 @@ class Builder extends IlluminateBuilder
         $this->prefixWheres($query, $prefix);
 
         foreach ($query->getQuery()->with as $key => $value) {
-            $query->getQuery()->with[$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
+//            $query->getQuery()->with[$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
+//            $query->getQuery()->with[$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
+            unset($query->getQuery()->with[$key]);
+            $query->getQuery()->with[$prefix.".".$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
         }
 
         $this->query->mergeWith($query->getQuery()->with, $query->getQuery()->getBindings());
@@ -930,12 +933,17 @@ class Builder extends IlluminateBuilder
     {
         if (is_array($query->getQuery()->wheres)) {
             $query->getQuery()->wheres = array_map(function ($where) use ($prefix) {
-                if ($where['type'] == 'Carried') {
+                if ($where['type'] === 'Carried') {
                     return $where;
                 }
-                
-                $column = $where['column'];
-                $where['column'] = ($this->isId($column)) ? $column : $prefix.'.'.$column;
+
+                if ($where['type'] === 'nothappening') {
+                    $column = $where['column'];
+                    $where['column'] = ($this->isId($column)) ? $column : $prefix.'_'.$column;
+                } else {
+                    $column = $where['column'];
+                    $where['column'] = ($this->isId($column)) ? $column : $prefix.'.'.$column;
+                }
 
                 return $where;
             }, $query->getQuery()->wheres);
