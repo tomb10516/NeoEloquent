@@ -6,6 +6,7 @@ use Vinelab\NeoEloquent\Query\Builder;
 use Vinelab\NeoEloquent\Tests\TestCase;
 use Vinelab\NeoEloquent\Eloquent\Model;
 use Vinelab\NeoEloquent\Query\Grammars\CypherGrammar;
+use Vinelab\NeoEloquent\Eloquent\SoftDeletes;
 
 class AggregateTest extends TestCase
 {
@@ -312,7 +313,8 @@ class AggregateTest extends TestCase
 
 class User extends Model
 {
+    use SoftDeletes;
+    protected $dates = ['deleted_at'];
     protected $label = 'User';
-
     protected $fillable = ['logins', 'points', 'email'];
 }

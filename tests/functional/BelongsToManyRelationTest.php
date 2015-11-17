@@ -9,24 +9,38 @@ use Vinelab\NeoEloquent\Eloquent\Model;
 class User extends Model
 {
     protected $label = 'Individual';
-
     protected $fillable = ['name'];
 
     public function roles()
     {
         return $this->belongsToMany('Vinelab\NeoEloquent\Tests\Functional\Relations\BelongsToMany\Role', 'HAS_ROLE');
     }
+
+    public function roleDels()
+    {
+        return $this->belongsToMany('Vinelab\NeoEloquent\Tests\Functional\Relations\BelongsToMany\RoleDel', 'HAS_ROLE_DEL');
+    }
 }
 
 class Role extends Model
 {
     protected $label = 'Role';
-
     protected $fillable = ['title'];
 
     public function users()
     {
         return $this->belongsToMany('Vinelab\NeoEloquent\Tests\Functional\Relations\BelongsToMany\User', 'HAS_ROLE');
+    }
+}
+
+class RoleDel extends Model
+{
+    protected $label = 'RoleDel';
+    protected $fillable = ['title'];
+
+    public function users()
+    {
+        return $this->belongsToMany('Vinelab\NeoEloquent\Tests\Functional\Relations\BelongsToMany\User', 'HAS_ROLE_DEL');
     }
 }
 
@@ -37,10 +51,14 @@ class BelongsToManyRelationTest extends TestCase
         M::close();
 
         $users = User::all();
-        $users->each(function ($u) { $u->delete(); });
+        $users->each(function ($u) {
+            $u->delete();
+        });
 
         $roles = Role::all();
-        $roles->each(function ($r) { $r->delete(); });
+        $roles->each(function ($r) {
+            $r->delete();
+        });
 
         parent::tearDown();
     }
@@ -61,6 +79,19 @@ class BelongsToManyRelationTest extends TestCase
         $user = User::create(['name' => 'Creepy Dude']);
         $role = new Role(['title' => 'Master']);
         $relation = $user->roles()->save($role);
+
+        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeIn', $relation);
+        $this->assertTrue($relation->exists());
+        $this->assertGreaterThanOrEqual(0, $relation->id);
+
+        $relation->delete();
+    }
+
+    public function testSavingRelatedBelongsToManyDel()
+    {
+        $user = User::create(['name' => 'Creepy Dude']);
+        $roleDel = new RoleDel(['title' => 'Master']);
+        $relation = $user->roleDels()->save($roleDel);
 
         $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeIn', $relation);
         $this->assertTrue($relation->exists());
@@ -168,6 +199,26 @@ class BelongsToManyRelationTest extends TestCase
         $relation->delete();
     }
 
+    public function testFindingBothEdgesDel()
+    {
+        $user = User::create(['name' => 'Creepy Dude']);
+        $roleDel = RoleDel::create(['title' => 'Master']);
+        $relation = $user->roleDels()->attach($roleDel->id);
+
+        $edgeIn = $user->roleDels()->edge($roleDel);
+
+        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeIn', $edgeIn);
+        $this->assertTrue($edgeIn->exists());
+        $this->assertGreaterThan(0, $edgeIn->id);
+
+        $edgeIn = $roleDel->users()->edge($user);
+        $this->assertInstanceOf('Vinelab\NeoEloquent\Eloquent\Edges\EdgeOut', $edgeIn);
+        $this->assertTrue($edgeIn->exists());
+        $this->assertGreaterThan(0, $edgeIn->id);
+
+        $relation->delete();
+    }
+
     public function testDetachingModelById()
     {
         $user = User::create(['name' => 'Creepy Dude']);
@@ -208,7 +259,9 @@ class BelongsToManyRelationTest extends TestCase
         $this->assertInstanceOf('Illuminate\Database\Eloquent\Collection', $edges);
         $this->assertCount(3, $edges->toArray());
 
-        $edges->each(function ($edge) { $edge->delete(); });
+        $edges->each(function ($edge) {
+            $edge->delete();
+        });
     }
 
     public function testSyncingModelIds()
@@ -224,7 +277,9 @@ class BelongsToManyRelationTest extends TestCase
 
         $edges = $user->roles()->edges();
 
-        $edgesIds = array_map(function ($edge) { return $edge->getRelated()->getKey(); }, $edges->toArray());
+        $edgesIds = array_map(function ($edge) {
+            return $edge->getRelated()->getKey();
+        }, $edges->toArray());
 
         $this->assertTrue(in_array($admin->id, $edgesIds));
         $this->assertTrue(in_array($editor->id, $edgesIds));
@@ -248,7 +303,9 @@ class BelongsToManyRelationTest extends TestCase
 
         $edges = $user->roles()->edges();
 
-        $edgesIds = array_map(function ($edge) { return $edge->getRelated()->getKey(); }, $edges->toArray());
+        $edgesIds = array_map(function ($edge) {
+            return $edge->getRelated()->getKey();
+        }, $edges->toArray());
 
         $this->assertTrue(in_array($admin->id, $edgesIds));
         $this->assertTrue(in_array($editor->id, $edgesIds));
@@ -276,7 +333,9 @@ class BelongsToManyRelationTest extends TestCase
 
         $edges = $user->roles()->edges();
 
-        $edgesIds = array_map(function ($edge) { return $edge->getRelated()->getKey(); }, $edges->toArray());
+        $edgesIds = array_map(function ($edge) {
+            return $edge->getRelated()->getKey();
+        }, $edges->toArray());
 
         // count the times that $master->id exists, it it were more than 1 then the relationship hasn't been updated,
         // instead it was duplicated
@@ -311,7 +370,9 @@ class BelongsToManyRelationTest extends TestCase
             $this->assertGreaterThan(0, $role->id);
         }
 
-        $user->roles()->edges()->each(function ($edge) { $edge->delete(); });
+        $user->roles()->edges()->each(function ($edge) {
+            $edge->delete();
+        });
     }
 
     public function testEagerLoadingBelongsToMany()
@@ -330,7 +391,9 @@ class BelongsToManyRelationTest extends TestCase
         $this->assertArrayHasKey('roles', $relations);
         $this->assertCount(3, $relations['roles']);
 
-        $edges->each(function ($relation) { $relation->delete(); });
+        $edges->each(function ($relation) {
+            $relation->delete();
+        });
     }
 
     /**
@@ -419,8 +482,8 @@ class BelongsToManyRelationTest extends TestCase
         $this->assertEquals(3, count($user->roles), 'relations created successfully');
 
         $deleted = $fetched->whereHas('roles', function ($q) {
-            $q->where('title', 'Master');
-        })->delete();
+                $q->where('title', 'Master');
+            })->delete();
 
         $this->assertTrue($deleted);
 

@@ -5,6 +5,7 @@ namespace Vinelab\NeoEloquent\Tests\Functional\Relations\HyperMorphTo;
 use Mockery as M;
 use Vinelab\NeoEloquent\Tests\TestCase;
 use Vinelab\NeoEloquent\Eloquent\Model;
+use Vinelab\NeoEloquent\Eloquent\SoftDeletes;
 
 class PolymorphicHyperMorphToTest extends TestCase
 {
@@ -298,7 +299,9 @@ class PolymorphicHyperMorphToTest extends TestCase
 
         $edges = $user->comments($post)->edges();
 
-        $edgesIds = array_map(function ($edge) { return $edge->getRelated()->getKey(); }, $edges->toArray());
+        $edgesIds = array_map(function ($edge) {
+            return $edge->getRelated()->getKey();
+        }, $edges->toArray());
         $this->assertTrue(in_array($anotherCommentOnPost->id, $edgesIds));
         $this->assertFalse(in_array($commentOnPost->id, $edgesIds));
 
@@ -329,7 +332,9 @@ class PolymorphicHyperMorphToTest extends TestCase
 
         $edges = $user->comments($post)->edges();
 
-        $edgesIds = array_map(function ($edge) { return $edge->getRelated()->getKey(); }, $edges->toArray());
+        $edgesIds = array_map(function ($edge) {
+            return $edge->getRelated()->getKey();
+        }, $edges->toArray());
         $this->assertTrue(in_array($anotherCommentOnPost->id, $edgesIds));
         $this->assertTrue(in_array($commentOnPost->id, $edgesIds));
 
@@ -363,7 +368,9 @@ class PolymorphicHyperMorphToTest extends TestCase
 
         $edges = $user->comments($post)->edges();
 
-        $edgesIds = array_map(function ($edge) { return $edge->getRelated()->getKey(); }, $edges->toArray());
+        $edgesIds = array_map(function ($edge) {
+            return $edge->getRelated()->getKey();
+        }, $edges->toArray());
         $this->assertTrue(in_array($anotherCommentOnPost->id, $edgesIds));
         $this->assertTrue(in_array($commentOnPost->id, $edgesIds));
 
@@ -447,6 +454,47 @@ class PolymorphicHyperMorphToTest extends TestCase
         $this->assertCount(1, $videoRelations['comments']);
         foreach ($videoRelations['comments'] as $comment) {
             $this->assertInstanceOf('Vinelab\NeoEloquent\Tests\Functional\Relations\HyperMorphTo\Comment', $comment);
+            $this->assertTrue($comment->exists);
+            $this->assertGreaterThanOrEqual(0, $comment->id);
+            $this->assertEquals($commentOnVideo->toArray(), $comment->toArray());
+        }
+    }
+
+    public function testEagerLoadingMorphedModelDel()
+    {
+        $userDel = UserDel::create(['name' => 'Hmm...']);
+        $postCommentorDel = UserDel::create(['name' => 'I Comment On Posts']);
+        $videoCommentorDel = UserDel::create(['name' => 'I Comment On Videos']);
+        // create the user's post and video
+        $userDel->postDels()->create(['title' => 'Another Place', 'body' => 'To Go..']);
+        $userDel->videoDels()->create(['title' => 'When We Meet', 'url' => 'http://some.url']);
+        // Grab them back
+        $postDel = $userDel->postDels->first();
+        $videoDel = $userDel->videoDels->first();
+
+        $commentOnPostDel = CommentDel::create(['text' => 'Please soooooon!']);
+        $postCommentDel = $postCommentorDel->commentDels($postDel)->attach($commentOnPostDel);
+
+        $postDel = PostDel::with('commentDels')->find($postDel->id);
+        $postRelations = $postDel->getRelations();
+        $this->assertArrayHasKey('commentDels', $postRelations);
+        $this->assertCount(1, $postRelations['commentDels']);
+        foreach ($postRelations['commentDels'] as $comment) {
+            $this->assertInstanceOf('Vinelab\NeoEloquent\Tests\Functional\Relations\HyperMorphTo\CommentDel', $comment);
+            $this->assertTrue($comment->exists);
+            $this->assertGreaterThanOrEqual(0, $comment->id);
+            $this->assertEquals($commentOnPostDel->toArray(), $comment->toArray());
+        }
+
+        $commentOnVideo = new CommentDel(['title' => 'When We Meet', 'url' => 'http://some.url']);
+        $videoComment = $videoCommentorDel->commentDels($videoDel)->attach($commentOnVideo);
+
+        $videoDel = VideoDel::with('commentDels')->find($videoDel->id);
+        $videoRelations = $videoDel->getRelations();
+        $this->assertArrayHasKey('commentDels', $videoRelations);
+        $this->assertCount(1, $videoRelations['commentDels']);
+        foreach ($videoRelations['commentDels'] as $comment) {
+            $this->assertInstanceOf('Vinelab\NeoEloquent\Tests\Functional\Relations\HyperMorphTo\CommentDel', $comment);
             $this->assertTrue($comment->exists);
             $this->assertGreaterThanOrEqual(0, $comment->id);
             $this->assertEquals($commentOnVideo->toArray(), $comment->toArray());
@@ -640,7 +688,6 @@ class PolymorphicHyperMorphToTest extends TestCase
 class User extends Model
 {
     protected $label = 'User';
-
     protected $fillable = ['name'];
 
     public function comments($model = null)
@@ -662,7 +709,6 @@ class User extends Model
 class Post extends Model
 {
     protected $label = 'Post';
-
     protected $fillable = ['title', 'body'];
 
     public function comments()
@@ -674,7 +720,6 @@ class Post extends Model
 class Video extends Model
 {
     protected $label = 'Video';
-
     protected $fillable = ['title', 'url'];
 
     public function comments()
@@ -686,7 +731,6 @@ class Video extends Model
 class Comment extends Model
 {
     protected $label = 'Comment';
-
     protected $fillable = ['text'];
 
     public function commentable()
@@ -702,5 +746,70 @@ class Comment extends Model
     public function video()
     {
         return $this->morphTo('Vinelab\NeoEloquent\Tests\Functional\Relations\HyperMorphTo\Video', 'ON');
+    }
+}
+
+class CommentDel extends Model
+{
+    use SoftDeletes;
+    protected $label = 'CommentDel';
+    protected $fillable = ['text'];
+
+    public function commentable()
+    {
+        return $this->morphTo();
+    }
+
+    public function postDel()
+    {
+        return $this->morphTo('Vinelab\NeoEloquent\Tests\Functional\Relations\HyperMorphTo\PostDel', 'DEL_ON');
+    }
+
+    public function videoDel()
+    {
+        return $this->morphTo('Vinelab\NeoEloquent\Tests\Functional\Relations\HyperMorphTo\VideoDel', 'DEL_ON');
+    }
+}
+
+class UserDel extends Model
+{
+    protected $label = 'UserDel';
+    protected $fillable = ['name'];
+
+    public function commentDels($model = null)
+    {
+        return $this->hyperMorph($model, 'Vinelab\NeoEloquent\Tests\Functional\Relations\HyperMorphTo\CommentDel', 'DEL_COMMENTED', 'DEL_ON');
+    }
+
+    public function postDels()
+    {
+        return $this->hasMany('Vinelab\NeoEloquent\Tests\Functional\Relations\HyperMorphTo\PostDel', 'DEL_POSTED');
+    }
+
+    public function videoDels()
+    {
+        return $this->hasMany('Vinelab\NeoEloquent\Tests\Functional\Relations\HyperMorphTo\VideoDel', 'DEL_UPLOADED');
+    }
+}
+
+class PostDel extends Model
+{
+    protected $label = 'PostDel';
+    protected $fillable = ['title', 'body'];
+
+    public function commentDels()
+    {
+        return $this->morphMany('Vinelab\NeoEloquent\Tests\Functional\Relations\HyperMorphTo\CommentDel', 'DEL_ON');
+    }
+}
+
+class VideoDel extends Model
+{
+    protected $label = 'Video';
+    protected $fillable = ['title', 'url'];
+
+    public function commentDels()
+    {
+        return $this->morphMany('Vinelab\NeoEloquent\Tests\Functional\Relations\HyperMorphTo\CommentDel', 'DEL_ON');
     }
 }

@@ -167,6 +167,8 @@ abstract class Model extends IlluminateModel
         // actually be responsible for retrieving and hydrating every relations.
         $query = $instance->newQuery();
 
+        $this->setSoftDeletePlaceholderToRelation($query, $relation);
+
         $otherKey = $otherKey ?: $instance->getKeyName();
 
         return new BelongsTo($query, $this, $foreignKey, $otherKey, $relation);
@@ -207,6 +209,8 @@ abstract class Model extends IlluminateModel
         // actually be responsible for retrieving and hydrating every relations.
         $query = $instance->newQuery();
 
+        $this->setSoftDeletePlaceholderToRelation($query, $relation);
+
         $otherKey = $otherKey ?: $instance->getKeyName();
 
         return new HasOne($query, $this, $foreignKey, $otherKey, $relation);
@@ -242,14 +246,7 @@ abstract class Model extends IlluminateModel
 
         $query = $instance->newQuery();
 
-        if (isset($query->getQuery()->wheres)) {
-            for ($i = 0; $i < count($query->getQuery()->wheres); ++$i) {
-                if ($query->getQuery()->wheres[$i]['type'] == 'SoftDeleted') {
-                    $query->getQuery()->wheres[$i]['placeholderType'] = 'relation';
-                    $query->getQuery()->wheres[$i]['placeholder'] = $relation;
-                }
-            }
-        }
+        $this->setSoftDeletePlaceholderToRelation($query, $relation);
 
         return new HasMany($query, $this, $type, $key, $relation);
     }
@@ -300,6 +297,8 @@ abstract class Model extends IlluminateModel
         // appropriate query constraint and entirely manages the hydrations.
         $query = $instance->newQuery();
 
+        $this->setSoftDeletePlaceholderToRelation($query, $relation);
+
         return new BelongsToMany($query, $this, $type, $key, $relation);
     }
 
@@ -343,6 +342,17 @@ abstract class Model extends IlluminateModel
         // the relationship instances for the relation. The relations will set
         // appropriate query constraint and entirely manages the hydrations.
         $query = $instance->newQuery();
+
+        // because this is a relation, the placeholder won't be the one assigned by SoftDeletingScope
+        // we must change it from being node based to relation based
+        if (isset($query->getQuery()->wheres)) {
+            for ($i = 0; $i < count($query->getQuery()->wheres); ++$i) {
+                if ($query->getQuery()->wheres[$i]['type'] == 'SoftDeleted') {
+                    $query->getQuery()->wheres[$i]['placeholderType'] = 'relation';
+                    $query->getQuery()->wheres[$i]['placeholder'] = $relation;
+                }
+            }
+        }
 
         return new HyperMorph($query, $this, $model, $type, $morphType, $key, $relation);
     }
@@ -394,6 +404,8 @@ abstract class Model extends IlluminateModel
         // appropriate query constraint and entirely manages the hydrations.
         $query = $instance->newQuery();
 
+        $this->setSoftDeletePlaceholderToRelation($query, $relation);
+
         return new MorphMany($query, $this, $relationType, $key, $relation);
     }
 
@@ -435,6 +447,7 @@ abstract class Model extends IlluminateModel
         // the relationship instances for the relation. The relations will set
         // appropriate query constraint and entirely manages the hydrations.
         $query = $instance->newQuery();
+        $this->setSoftDeletePlaceholderToRelation($query, $relation);
 
         return new MorphedByOne($query, $this, $type, $key, $relation);
     }
@@ -701,6 +714,25 @@ abstract class Model extends IlluminateModel
             $this->fireModelEvent('updated', false);
         } else {
             return false;
+        }
+    }
+
+    /**
+     *   When a MATCH is going to be on relation, the placeholder won't be the one assigned by SoftDeletingScope
+     *   we must change it from being node based to relation based.
+     * 
+     * @param type $query
+     * @param type $relation
+     */
+    protected function setSoftDeletePlaceholderToRelation($query, $relation)
+    {
+        if (isset($query->getQuery()->wheres)) {
+            for ($i = 0; $i < count($query->getQuery()->wheres); ++$i) {
+                if ($query->getQuery()->wheres[$i]['type'] == 'SoftDeleted') {
+                    $query->getQuery()->wheres[$i]['placeholderType'] = 'relation';
+                    $query->getQuery()->wheres[$i]['placeholder'] = $relation;
+                }
+            }
         }
     }
 }
