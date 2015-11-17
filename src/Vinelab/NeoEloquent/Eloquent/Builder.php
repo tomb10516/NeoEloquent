@@ -900,7 +900,16 @@ class Builder extends IlluminateBuilder
      */
     protected function prefixAndMerge(Builder $query, $prefix)
     {
+        foreach ($query->getQuery()->wheres as $where) {
+            if ($where['type'] === 'SoftDeleted') {
+
+                $query->getQuery()->with[$prefix.$where['placeholder']] = "foo";
+            }
+        }
+
         $this->prefixWheres($query, $prefix);
+
+
 
         foreach ($query->getQuery()->with as $key => $value) {
 //            $query->getQuery()->with[$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
