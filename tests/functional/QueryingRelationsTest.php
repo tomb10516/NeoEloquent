@@ -11,6 +11,7 @@ use Vinelab\NeoEloquent\Eloquent\SoftDeletes;
 
 class QueryingRelationsTest extends TestCase
 {
+
     public function tearDown()
     {
         M::close();
@@ -95,6 +96,158 @@ class QueryingRelationsTest extends TestCase
         $postWithTen = Post::has('commentDels', '=', 10)->get();
         $this->assertEquals(1, count($postWithTen));
         $this->assertEquals($postWithTenComments->toArray(), $postWithTen->first()->toArray());
+    }
+
+    public function testQueryingOrderByHas()
+    {
+        $postNoComment = Post::create(['title' => 'I have no comments =(', 'body' => 'None!']);
+        $postNoComment->tags()->save(Tag::create());
+        $postWithComment = Post::create(['title' => 'Nananana', 'body' => 'Commentmaaan']);
+        $postWithComment->tags()->save(Tag::create());
+        $postWithTwoComments = Post::create(['title' => 'I got two']);
+        $postWithTwoComments->tags()->save(Tag::create());
+        $postWithTenComments = Post::create(['tite' => 'Up yours posts, got 10 here']);
+        $postWithTenComments->tags()->save(Tag::create());
+
+        $comment = new Comment(['text' => 'food']);
+        $postWithComment->comments()->save($comment);
+
+        // add two commentDels to $postWithTwoComments
+        for ($i = 0; $i < 2; ++$i) {
+            $postWithTwoComments->comments()->create(['text' => "Comment $i"]);
+        }
+        // add ten commentDels to $postWithTenComments
+        for ($i = 0; $i < 10; ++$i) {
+            $postWithTenComments->comments()->create(['text' => "Comment $i"]);
+        }
+
+        $allPosts = Post::get();
+        $this->assertEquals(4, count($allPosts));
+
+        $posts = Post::has('comments')->get();
+        $this->assertEquals(3, count($posts));
+        $expectedHasComments = [$postWithComment->id, $postWithTwoComments->id, $postWithTenComments->id];
+        foreach ($posts as $key => $post) {
+            $this->assertTrue(in_array($post->id, $expectedHasComments));
+        }
+
+        $postsWithMoreThanOneComment = Post::has('comments', '>=', 2)->get();
+        $this->assertEquals(2, count($postsWithMoreThanOneComment));
+        $expectedWithMoreThanOne = [$postWithTwoComments->id, $postWithTenComments->id];
+        foreach ($postsWithMoreThanOneComment as $post) {
+            $this->assertTrue(in_array($post->id, $expectedWithMoreThanOne));
+        }
+
+        $postWithTen = Post::has('comments', '=', 10)->get();
+        $this->assertEquals(1, count($postWithTen));
+        $this->assertEquals($postWithTenComments->id, $postWithTen->first()->id);
+
+        $postsOrdered = Post::orderByHas('comments', 'desc')->has('tags')->get();
+        $this->assertEquals(3, count($postsOrdered));
+        $lowest = null;
+        foreach ($postsOrdered as $post) {
+            $newLowest = $post->comments()->count();
+            if ($lowest != null) {
+                $this->assertLessThanOrEqual($lowest, $newLowest);
+            }
+            $lowest = $newLowest;
+        }
+    }
+
+    public function testQueryingHasCountDelAfterDel()
+    {
+        $postNoComment = Post::create(['title' => 'I have no comments =(', 'body' => 'None!']);
+        $postNoComment->tags()->save(Tag::create());
+        $postWithComment = Post::create(['title' => 'Nananana', 'body' => 'Commentmaaan']);
+        $postWithComment->tags()->save(Tag::create());
+        $postWithTwoComments = Post::create(['title' => 'I got two']);
+        $postWithTwoComments->tags()->save(Tag::create());
+        $postWithTenComments = Post::create(['tite' => 'Up yours posts, got 10 here']);
+        $postWithTenComments->tags()->save(Tag::create());
+
+        $comment = new CommentDel(['text' => 'food']);
+        $postWithComment->commentDels()->save($comment);
+
+        // add two commentDels to $postWithTwoComments
+        for ($i = 0; $i < 2; ++$i) {
+            $postWithTwoComments->commentDels()->create(['text' => "Comment $i"]);
+        }
+        // add ten commentDels to $postWithTenComments
+        for ($i = 0; $i < 10; ++$i) {
+            $postWithTenComments->commentDels()->create(['text' => "Comment $i"]);
+        }
+
+        $allPosts = Post::get();
+        $this->assertEquals(4, count($allPosts));
+
+        $posts = Post::has('commentDels')->get();
+        $this->assertEquals(3, count($posts));
+        $expectedHasComments = [$postWithComment->id, $postWithTwoComments->id, $postWithTenComments->id];
+        foreach ($posts as $key => $post) {
+            $this->assertTrue(in_array($post->id, $expectedHasComments));
+        }
+
+        $postsWithMoreThanOneComment = Post::has('commentDels', '>=', 2)->get();
+        $this->assertEquals(2, count($postsWithMoreThanOneComment));
+        $expectedWithMoreThanOne = [$postWithTwoComments->id, $postWithTenComments->id];
+        foreach ($postsWithMoreThanOneComment as $post) {
+            $this->assertTrue(in_array($post->id, $expectedWithMoreThanOne));
+        }
+
+        $commentToDelete = $postWithTenComments->commentDels()->first();
+        $commentToDelete->delete();
+
+        $postWithNine = Post::has('commentDels', '=', 9)->get();
+        $this->assertEquals(1, count($postWithNine));
+        $this->assertEquals($postWithTenComments->id, $postWithNine->first()->id);
+
+        $postsOrdered = Post::orderByHas('commentDels', 'desc')->has('tags')->get();
+        $this->assertEquals(3, count($postsOrdered));
+        $lowest = null;
+        foreach ($postsOrdered as $post) {
+            $newLowest = $post->commentDels()->count();
+            if ($lowest != null) {
+                $this->assertLessThanOrEqual($lowest, $newLowest);
+            }
+            $lowest = $newLowest;
+        }
+    }
+
+    public function testQueryingNestedWhereHas()
+    {
+        $this->markTestIncomplete('Nested whereHas queries not yet implemented');
+        $user = User::create(['name' => 'cappuccino']);
+        $user2 = User::create(['name' => 'bob']);
+
+        $role = Role::createWith(['alias' => 'pikachu'], [
+                'permissions' => [
+                    'title' => 'Read Things',
+                    'alias' => 'read',
+                ],
+        ]);
+        $role2 = Role::createWith(['alias' => 'role2'], [
+                'permissions' => [
+                    'title' => 'Write Things',
+                    'alias' => 'write',
+                ],
+        ]);
+        $account = Account::create(['guid' => uniqid()]);
+        $account2 = Account::create(['guid' => uniqid()]);
+
+        $user->roles()->save($role);
+        $user->account()->save($account);
+        $user2->roles()->save($role2);
+
+        $found = User::whereHas('roles', function ($q) {
+                $q->whereHas('permissions', function ($q) {
+                    $q->where('alias', 'read');
+                });
+            })->get();
+
+        $this->assertEquals(1, count($found));
+
+        $this->assertInstanceOf('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\User', $found[0]);
+        $this->assertEquals($user->toArray(), $found[0]->toArray());
     }
 
     public function testQueryingWhereHasOne()
@@ -649,6 +802,69 @@ class QueryingRelationsTest extends TestCase
         $this->assertEquals($acme, $found);
     }
 
+    public function testFilterRelationPropertiesBinaryOps()
+    {
+        $this->markTestSkipped("relation filtering not yet implemented");
+
+        $organization = Organization::create(['name' => 'cOrg']);
+        for ($i = 0; $i < 4; ++$i) {
+            $user = User::create(['name' => 'user'.$i]);
+            $organization->members()->save($user);
+            $membershipRelation = $organization->members()->edge($user);
+            if ($i < 2) {
+                $membershipRelation->status = 'active';
+            } else {
+                $membershipRelation->status = 'expired';
+            }
+            $membershipRelation->save();
+        }
+        $activeMembers = $organization->members()->whereRel('status', '=', 'active')->get();
+        $this->assertEquals(2, count($activeMembers));
+        foreach ($activeMembers as $member) {
+            $membershipEdge = $organization->members()->edge($member);
+            $this->assertEquals('active', $membershipEdge->status);
+        }
+    }
+
+    public function testFilterRelationPropertiesWithNullValue()
+    {
+        $this->markTestSkipped("relation filtering not yet implemented");
+
+        $organization = Organization::create(['name' => 'cOrg']);
+        for ($i = 0; $i < 4; ++$i) {
+            $user = User::create(['name' => 'user'.$i]);
+            $organization->members()->save($user);
+            $membershipRelation = $organization->members()->edge($user);
+            if ($i < 2) {
+                $membershipRelation->status = 'active';
+            }
+            $membershipRelation->save();
+        }
+        $membersWithoutStatus = $organization->members()->whereRel('status', '=', null)->get();
+        $this->assertEquals(2, count($membersWithoutStatus));
+        foreach ($membersWithoutStatus as $member) {
+            $membershipEdge = $organization->members()->edge($member);
+            $this->assertNull($membershipEdge->status);
+        }
+        $membersWithStatus = $organization->members()->whereRel('status', 'IS NOT NULL')->get();
+        $this->assertEquals(2, count($membersWithStatus));
+        foreach ($membersWithStatus as $member) {
+            $membershipEdge = $organization->members()->edge($member);
+            $this->assertNotNull($membershipEdge->status);
+        }
+    }
+
+    /**
+     * @expectedException Vinelab\NeoEloquent\Exceptions\Exception
+     */
+    public function testFilterRelationPropertiesNoRelation()
+    {
+        $this->markTestSkipped("relation filtering not yet implemented");
+
+        $organization = Organization::create(['name' => 'cOrg']);
+        $activeMembers = $organization->whereRel('status', '=', 'active')->get();
+    }
+
     public function testSavingCreateWithRelationWithDateTimeAndCarbonInstances()
     {
         $yesterday = Carbon::now()->subDay();
@@ -805,7 +1021,7 @@ class Post extends Model
 
     public function comments()
     {
-        return $this->hasMany('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\Comment', 'COMMENT');
+        return $this->hasMany('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\Comment', 'HAS_COMMENT');
     }
 
     public function commentDels()
@@ -823,18 +1039,21 @@ class Tag extends Model
 {
     protected $label = 'Tag';
     protected $fillable = ['title'];
+
 }
 
 class Photo extends Model
 {
     protected $label = 'Photo';
     protected $fillable = ['url', 'caption', 'metadata'];
+
 }
 
 class Video extends Model
 {
     protected $label = 'Video';
     protected $fillable = ['title', 'description', 'stream_url', 'thumbnail'];
+
 }
 
 class Comment extends Model
@@ -844,12 +1063,13 @@ class Comment extends Model
 
     public function post()
     {
-        return $this->belongsTo('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\Post', 'COMMENT');
+        return $this->belongsTo('Vinelab\NeoEloquent\Tests\Functional\QueryingRelations\Post', 'HAS_COMMENT');
     }
 }
 
 class CommentDel extends Model
 {
+
     use SoftDeletes;
     protected $dates = ['deleted_at'];
     protected $label = 'CommentDel';

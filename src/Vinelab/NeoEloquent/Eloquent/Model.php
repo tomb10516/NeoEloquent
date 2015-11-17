@@ -167,7 +167,7 @@ abstract class Model extends IlluminateModel
         // actually be responsible for retrieving and hydrating every relations.
         $query = $instance->newQuery();
 
-        $otherKey = $otherKey ?: $instance->getKeyName();
+        $otherKey = $otherKey ? : $instance->getKeyName();
 
         return new BelongsTo($query, $this, $foreignKey, $otherKey, $relation);
     }
@@ -207,7 +207,7 @@ abstract class Model extends IlluminateModel
         // actually be responsible for retrieving and hydrating every relations.
         $query = $instance->newQuery();
 
-        $otherKey = $otherKey ?: $instance->getKeyName();
+        $otherKey = $otherKey ? : $instance->getKeyName();
 
         return new HasOne($query, $this, $foreignKey, $otherKey, $relation);
     }
@@ -234,13 +234,24 @@ abstract class Model extends IlluminateModel
         }
 
         // the $type should be the UPPERCASE of the relation not the foreign key.
-        $type = $type ?: mb_strtoupper($relation);
+        $type = $type ? : mb_strtoupper($relation);
 
         $instance = new $related();
 
-        $key = $key ?: $this->getKeyName();
+        $key = $key ? : $this->getKeyName();
 
-        return new HasMany($instance->newQuery(), $this, $type, $key, $relation);
+        $query = $instance->newQuery();
+
+        if (isset($query->getQuery()->wheres)) {
+            for ($i = 0; $i < count($query->getQuery()->wheres); $i++) {
+                if ($query->getQuery()->wheres[$i]['type'] == 'SoftDeleted') {
+                    $query->getQuery()->wheres[$i]['placeholderType'] = "relation";
+                    $query->getQuery()->wheres[$i]['placeholder'] = $relation;
+                }
+            }
+        }
+
+        return new HasMany($query, $this, $type, $key, $relation);
     }
 
     /**
@@ -273,7 +284,7 @@ abstract class Model extends IlluminateModel
         }
 
         // If no $key was provided we will consider it the key name of this model.
-        $key = $key ?: $this->getKeyName();
+        $key = $key ? : $this->getKeyName();
 
         // If no relationship type was provided, we can use the previously traced back
         // $relation being the function name that called this method and using it in its
@@ -317,7 +328,7 @@ abstract class Model extends IlluminateModel
         }
 
         // If no $key was provided we will consider it the key name of this model.
-        $key = $key ?: $this->getKeyName();
+        $key = $key ? : $this->getKeyName();
 
         // If no relationship type was provided, we can use the previously traced back
         // $relation being the function name that called this method and using it in its
@@ -367,7 +378,7 @@ abstract class Model extends IlluminateModel
         }
 
         // If no $key was provided we will consider it the key name of this model.
-        $key = $key ?: $this->getKeyName();
+        $key = $key ? : $this->getKeyName();
 
         // If no relationship type was provided, we can use the previously traced back
         // $relation being the function name that called this method and using it in its
@@ -409,7 +420,7 @@ abstract class Model extends IlluminateModel
         }
 
         // If no $key was provided we will consider it the key name of this model.
-        $key = $key ?: $this->getKeyName();
+        $key = $key ? : $this->getKeyName();
 
         // If no relationship type was provided, we can use the previously traced back
         // $relation being the function name that called this method and using it in its
@@ -578,6 +589,7 @@ abstract class Model extends IlluminateModel
 
         return $created;
     }
+
     /**
      * Get the polymorphic relationship columns.
      *
@@ -589,7 +601,7 @@ abstract class Model extends IlluminateModel
      */
     protected function getMorphs($name, $type, $id)
     {
-        $type = $type ?: $name.'_type';
+        $type = $type ? : $name.'_type';
 
         $id = $this->getkeyname();
 
@@ -633,33 +645,33 @@ abstract class Model extends IlluminateModel
 
         return $dirty;
     }
-
     /*
      * Adds more labels
      * @param $labels array of strings containing labels to be added
      * @return bull true if success, false if failure
      */
+
     public function addLabels($labels)
     {
         return $this->updateLabels($labels, 'add');
     }
-
     /*
      * Drops labels
      * @param $labels array of strings containing labels to be dropped
      * @return bull true if success, false if failure
      */
+
     public function dropLabels($labels)
     {
         return $this->updateLabels($labels, 'drop');
     }
-
     /*
      * Adds or Drops labels
      * @param $labels array of strings containing labels to be dropped
      * @param $operation string can be 'add' or 'drop'
      * @return bull true if success, false if failure
      */
+
     public function updateLabels($labels, $operation = 'add')
     {
         $query = $this->newQueryWithoutScopes();

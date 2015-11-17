@@ -71,6 +71,13 @@ class Builder extends IlluminateQueryBuilder
     );
 
     /**
+     * Some operators take only one argument (the column).
+     */
+    protected $unaryOperators = array(
+        'is null', 'is not null',
+    );
+
+    /**
      * Create a new query builder instance.
      *
      * @param Vinelab\NeoEloquent\Connection $connection

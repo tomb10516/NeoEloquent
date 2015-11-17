@@ -404,6 +404,54 @@ class Builder extends IlluminateBuilder
     }
 
     /**
+     * Add a relationship query condition and order results by the count of the
+     * relationship.
+     *
+     * orderByHas builds on top of Has.  You call orderByHas with the same
+     * parameters as Has except that the 2nd argument is the direction of
+     * the ordering, then the 3rd argument is the same as the 2nd argument of Has()
+     * and so forth.
+     *
+     * for example if you were calling has like
+     *   $postsWithAtLeast2Comments = Post::has('comments', '>=', 2);
+     * if you want those same results except ordered by number of comments
+     * in descending order you would write
+     *   $postsWithAtLeast2Comments = Post::orderByHas('comments', 'desc', '>=', 2);
+     *
+     * @param string   $relation
+     * @param string   $operator
+     * @param int      $count
+     * @param string   $boolean
+     * @param \Closure $callback
+     *
+     * @return \Illuminate\Database\Eloquent\Builder|static
+     */
+    public function orderByHas($relation, $direction = 'asc', $operator = '>=', $count = 1, $boolean = 'and', Closure $callback = null)
+    {
+        $direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';
+
+        $orderBy = [
+            'direction' => $direction
+        ];
+
+        $this->has($relation, $operator, $count, $boolean, $callback, $orderBy);
+//        $wheres = $this->getQuery()->wheres;
+//        // the count column should always be the top of the stack because no other
+//        // where statements should be processed between the call to has() and here
+//        $column = $wheres[count($wheres) - 1]['column'];
+//        // "raw" tells later steps of compilation that we don't want this column prefixed or modified
+//        //  in any other way, we have given this column the exact name we want in the 
+//        //  WITH and ORDER BY clauses
+//        $raw = true;
+//
+//        // adds to the $orders[] table what is needed to construct the clause in the form of
+//        // ORDER BY $column 
+//        $this->getQuery()->orders[] = compact('column', 'direction', 'raw');
+
+        return $this;
+    }
+
+    /**
      * Gather the properties of a Node including its id.
      *
      * @param \Everyman\Neo4j\Node $node
@@ -512,7 +560,7 @@ class Builder extends IlluminateBuilder
     {
         $paginator = $this->query->getConnection()->getPaginator();
         $page = $paginator->getCurrentPage();
-        $perPage = $perPage ?: $this->model->getPerPage();
+        $perPage = $perPage ? : $this->model->getPerPage();
         $this->query->skip(($page - 1) * $perPage)->take($perPage + 1);
 
         return new Paginator($this->get($columns), $perPage, $page, [
@@ -695,7 +743,7 @@ class Builder extends IlluminateBuilder
      *
      * @return \Illuminate\Database\Eloquent\Builder|static
      */
-    public function has($relation, $operator = '>=', $count = 1, $boolean = 'and', Closure $callback = null)
+    public function has($relation, $operator = '>=', $count = 1, $boolean = 'and', Closure $callback = null, $orderBy = null)
     {
         $relation = $this->getHasRelationQuery($relation);
 
@@ -733,6 +781,12 @@ class Builder extends IlluminateBuilder
             $countPart = $prefix.'_count';
             $this->carry([$relation->getParentNode(), "count($prefix)" => $countPart]);
             $this->whereCarried($countPart, $operator, $count);
+            if (isset($orderBy)) {
+                $column = $countPart ;
+                $direction = $orderBy['direction'];
+                $raw = true;
+                $this->getQuery()->orders[] = compact('column', 'direction', 'raw');
+            }
         }
 
         $parentNode = $relation->getParentNode();
@@ -918,7 +972,7 @@ class Builder extends IlluminateBuilder
         if (is_array($query->getQuery()->wheres)) {
             $query->getQuery()->wheres = array_map(function ($where) use ($prefix) {
                 if ($where['type'] === 'SoftDeleted') {
-                    $where['placeholderType'] = 'Relation'; // because relation prefix might not be node label
+                    $where['placeholderType'] = 'relation'; // because relation prefix might not be node label
                     $column = $where['column'];
                 } else {
                     $column = $where['column'];

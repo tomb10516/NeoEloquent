@@ -437,9 +437,22 @@ class CypherGrammar extends Grammar
      */
     public function compileOrders(Builder $query, $orders)
     {
-        return 'ORDER BY '.implode(', ', array_map(function ($order) {
-                    return $this->wrap($order['column']).' '.mb_strtoupper($order['direction']);
+        $cypher = 'ORDER BY '.implode(', ', array_map(function ($order) {
+                    $rv = null;
+                    // If an order has the 'raw' property then its "column" will
+                    // not be wrapped.  This is to support ordering by  relations and
+                    // aggrigates which have been prefixed in an earlier stage of
+                    // compilation
+                    if (isset($order['raw']) && $order['raw']) {
+                        $rv = $order['column'].' '.mb_strtoupper($order['direction']);
+                    } else {
+                        $rv = $this->wrap($order['column']).' '.mb_strtoupper($order['direction']);
+                    }
+
+                    return $rv;
                 }, $orders));
+
+        return $cypher;
     }
 
     /**

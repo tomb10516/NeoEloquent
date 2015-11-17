@@ -92,13 +92,12 @@ abstract class HasOneOrMany extends IlluminateHasOneOrMany implements RelationIn
     protected function getKeys(array $models, $key = null)
     {
         return array_unique(array_values(array_map(function ($value) use ($key) {
-            if (is_array($value)) {
-                $value = reset($value);
-            }
+                    if (is_array($value)) {
+                        $value = reset($value);
+                    }
 
-            return $key ? $value->getAttribute($key) : $value->getKey();
-
-        }, $models)));
+                    return $key ? $value->getAttribute($key) : $value->getKey();
+                }, $models)));
     }
 
     /**
@@ -297,7 +296,7 @@ abstract class HasOneOrMany extends IlluminateHasOneOrMany implements RelationIn
              *          return $this->hasOne('Phone', 'PHONE');
              *     }
              * }
-            */
+             */
 
             // Get the parent node's placeholder.
             $parentNode = $this->getParentNode();
@@ -307,7 +306,17 @@ abstract class HasOneOrMany extends IlluminateHasOneOrMany implements RelationIn
             $this->query->getQuery()->from = array($this->relation);
             // Build the MATCH ()-[]->() Cypher clause.
             $this->query->matchOut($this->parent, $this->related, $this->relation, $this->foreignKey, $this->localKey, $this->parent->{$this->localKey});
-            // Add WHERE clause over the parent node's matching key = value.
+//
+//            if (isset($this->query->wheres)) {
+//                foreach ($this->query->wheres as $where) {
+//                    if ($where['type'] == 'SoftDeleted') {
+//                        $where['placeholderType'] = 'relation';
+//                        $where['placeholder'] = 'foo';
+//                    }
+//                }
+//            }
+//
+//            // Add WHERE clause over the parent node's matching key = value.
             $this->query->where($parentNode.'.'.$this->localKey, '=', $this->parent->{$this->localKey});
         }
     }
@@ -359,7 +368,7 @@ abstract class HasOneOrMany extends IlluminateHasOneOrMany implements RelationIn
      */
     public function detach($id = array(), $touch = true)
     {
-        if (!$id instanceof Model and !$id instanceof Collection) {
+        if (!$id instanceof Model and ! $id instanceof Collection) {
             $id = $this->modelsFromIds($id);
         } elseif (!is_array($id)) {
             $id = [$id];
@@ -406,11 +415,12 @@ abstract class HasOneOrMany extends IlluminateHasOneOrMany implements RelationIn
         // for this model so we'll spin throuhg the edges of this model
         // for the specified type regardless of the direction and create
         // those that do not exist.
-
         // Let's fetch the existing edges first.
         $edges = $this->edges();
         // Collect the current related models IDs out of related models.
-        $current = array_map(function (Relation $edge) { return $edge->getRelated()->getKey(); }, $edges->toArray());
+        $current = array_map(function (Relation $edge) {
+            return $edge->getRelated()->getKey();
+        }, $edges->toArray());
 
         $records = $this->formatSyncList($ids);
 
