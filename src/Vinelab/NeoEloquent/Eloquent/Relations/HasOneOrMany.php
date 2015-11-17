@@ -306,17 +306,7 @@ abstract class HasOneOrMany extends IlluminateHasOneOrMany implements RelationIn
             $this->query->getQuery()->from = array($this->relation);
             // Build the MATCH ()-[]->() Cypher clause.
             $this->query->matchOut($this->parent, $this->related, $this->relation, $this->foreignKey, $this->localKey, $this->parent->{$this->localKey});
-//
-//            if (isset($this->query->wheres)) {
-//                foreach ($this->query->wheres as $where) {
-//                    if ($where['type'] == 'SoftDeleted') {
-//                        $where['placeholderType'] = 'relation';
-//                        $where['placeholder'] = 'foo';
-//                    }
-//                }
-//            }
-//
-//            // Add WHERE clause over the parent node's matching key = value.
+            // Add WHERE clause over the parent node's matching key = value.
             $this->query->where($parentNode.'.'.$this->localKey, '=', $this->parent->{$this->localKey});
         }
     }
