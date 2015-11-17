@@ -302,6 +302,34 @@ class Builder extends IlluminateQueryBuilder
     }
 
     /**
+     * Add a where clause for an edge property
+     * 
+     * Note that nesting is not supported
+     *
+     * @param  string  $column
+     * @param  string  $operator
+     * @param  mixed   $value
+     * @param  string  $boolean
+     * @return \Illuminate\Database\Query\Builder|static
+     *
+     * @throws \InvalidArgumentException
+     */
+    public function whereRel($column, $operator = null, $value = null, $boolean = 'and')
+    {
+        $type = 'Relation';
+        
+        $binding = $this->prepareBindingColumn($column);
+        
+        $this->wheres[] = compact('type', 'binding', 'column', 'operator', 'value', 'boolean');
+        
+        $property = $this->wrap($binding);
+        
+        $this->addBinding([$property => $value], 'where');
+        
+        return $this;
+    }
+
+    /**
      * Increment the value of an existing column on a where clause.
      * Used to allow querying on the same attribute with different values.
      *

@@ -313,6 +313,38 @@ class CypherGrammar extends Grammar
         return $this->wrap($where['column']).' '.$where['operator'].' '.$value;
     }
 
+    protected function whereRelation(Builder $query, $where)
+    {
+
+        $value = $this->parameter($where);
+
+        $match = null;
+        // get the relationship match so we can give the column the appropriate prefix
+        // also make sure only one relationship match exists in the query
+        foreach ($this->query->matches as $m) {
+            if ($m['type'] == 'Relation') {
+                if ($match == null) {
+                    $match = $m;
+                } else {
+                    throw new NeoEloquentException(
+                    "not yet implemented - whereRelation does not yet support querries with multiple relations");
+                }
+            }
+        }
+        if (!$match) {
+            throw new NeoEloquentException(
+            "whereRelation requires a relation in the query");
+        }
+
+        $related = $match['related'];
+        $relationship = $match['relationship'];
+        // Get the relationship ready for query
+        $relationshipVar = "rel_".mb_strtolower($relationship).'_'.$related['node'];
+//        $relationshipVar = $this->prepareRelationVar($relationship, $related['node']);
+
+        return $relationshipVar.'.'.$where['column'].' '.$where['operator'].' '.$value;
+    }
+
     /**
      * The where clause that excludes soft deleted models, or selects only soft deleted models
      * is added when the soft deleting scope is applied.  This is too early in the compilation
