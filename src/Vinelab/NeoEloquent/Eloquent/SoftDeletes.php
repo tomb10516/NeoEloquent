@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\SoftDeletes as IlluminateSoftDeletes;
 
 trait SoftDeletes
 {
-
     use IlluminateSoftDeletes;
 
     /**
@@ -27,18 +26,14 @@ trait SoftDeletes
 
     /**
      * Boot the soft deleting trait for a model.
-     *
-     * @return void
      */
     public static function bootSoftDeletes()
     {
-        static::addGlobalScope(new SoftDeletingScope);
+        static::addGlobalScope(new SoftDeletingScope());
     }
 
     /**
      * Force a hard delete on a soft deleted model.
-     *
-     * @return void
      */
     public function forceDelete()
     {
@@ -51,8 +46,6 @@ trait SoftDeletes
 
     /**
      * Perform the actual delete query on this model instance.
-     *
-     * @return void
      */
     protected function performDeleteOnModel()
     {
@@ -65,8 +58,6 @@ trait SoftDeletes
 
     /**
      * Perform the actual delete query on this model instance.
-     *
-     * @return void
      */
     protected function runSoftDelete()
     {
@@ -122,7 +113,7 @@ trait SoftDeletes
      */
     public static function withTrashed()
     {
-        return (new static)->newQueryWithoutScope(new SoftDeletingScope);
+        return (new static())->newQueryWithoutScope(new SoftDeletingScope());
     }
 
     /**
@@ -132,18 +123,17 @@ trait SoftDeletes
      */
     public static function onlyTrashed()
     {
-        $instance = new static;
+        $instance = new static();
 
         $column = $instance->getQualifiedDeletedAtColumn();
 
-        return $instance->newQueryWithoutScope(new SoftDeletingScope)->whereNotNull($column);
+        return $instance->newQueryWithoutScope(new SoftDeletingScope())->whereNotNull($column);
     }
 
     /**
      * Register a restoring model event with the dispatcher.
      *
-     * @param  \Closure|string  $callback
-     * @return void
+     * @param \Closure|string $callback
      */
     public static function restoring($callback)
     {
@@ -153,8 +143,7 @@ trait SoftDeletes
     /**
      * Register a restored model event with the dispatcher.
      *
-     * @param  \Closure|string  $callback
-     * @return void
+     * @param \Closure|string $callback
      */
     public static function restored($callback)
     {
@@ -170,6 +159,4 @@ trait SoftDeletes
     {
         return defined('static::DELETED_AT') ? static::DELETED_AT : 'deleted_at';
     }
-
-
 }

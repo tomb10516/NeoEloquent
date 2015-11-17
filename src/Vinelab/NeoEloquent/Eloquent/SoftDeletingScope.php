@@ -29,13 +29,12 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
     /**
      * Apply the scope to a given Eloquent query builder.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $builder
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return void
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     * @param \Illuminate\Database\Eloquent\Model   $model
      */
     public function apply(IlluminateBuilder $builder, IlluminateModel $model)
     {
-//        $foo = $builder->getQuery()->modelAsNode($model->getTable());
+        //        $foo = $builder->getQuery()->modelAsNode($model->getTable());
 //        $builder->whereCarried($foo . "_" . $model->getQualifiedDeletedAtColumn(), "IS", "NULL");
 //        $builder->carry([$foo . "." . $model->getQualifiedDeletedAtColumn() => $foo . "_" . $model->getQualifiedDeletedAtColumn()]);
 //        $this->extend($builder);
@@ -48,9 +47,8 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
     /**
      * Remove the scope from the given Eloquent query builder.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $builder
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return void
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     * @param \Illuminate\Database\Eloquent\Model   $model
      */
     public function remove(IlluminateBuilder $builder, IlluminateModel $model)
     {
@@ -66,8 +64,7 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
     /**
      * Extend the query builder with the needed functions.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $builder
-     * @return void
+     * @param \Illuminate\Database\Eloquent\Builder $builder
      */
     public function extend(IlluminateBuilder $builder)
     {
@@ -87,7 +84,8 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
     /**
      * Get the "deleted at" column for the builder.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $builder
+     * @param \Illuminate\Database\Eloquent\Builder $builder
+     *
      * @return string
      */
     protected function getDeletedAtColumn(IlluminateBuilder $builder)
@@ -102,8 +100,7 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
     /**
      * Add the force delete extension to the builder.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $builder
-     * @return void
+     * @param \Illuminate\Database\Eloquent\Builder $builder
      */
     protected function addForceDelete(IlluminateBuilder $builder)
     {
@@ -115,8 +112,7 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
     /**
      * Add the restore extension to the builder.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $builder
-     * @return void
+     * @param \Illuminate\Database\Eloquent\Builder $builder
      */
     protected function addRestore(IlluminateBuilder $builder)
     {
@@ -130,8 +126,7 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
     /**
      * Add the with-trashed extension to the builder.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $builder
-     * @return void
+     * @param \Illuminate\Database\Eloquent\Builder $builder
      */
     protected function addWithTrashed(IlluminateBuilder $builder)
     {
@@ -145,8 +140,7 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
     /**
      * Add the only-trashed extension to the builder.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $builder
-     * @return void
+     * @param \Illuminate\Database\Eloquent\Builder $builder
      */
     protected function addOnlyTrashed(IlluminateBuilder $builder)
     {
@@ -164,8 +158,9 @@ class SoftDeletingScope implements \Illuminate\Database\Eloquent\ScopeInterface
     /**
      * Determine if the given where clause is a soft delete constraint.
      *
-     * @param  array   $where
-     * @param  string  $column
+     * @param array  $where
+     * @param string $column
+     *
      * @return bool
      */
     protected function isSoftDeleteConstraint(array $where, $column)

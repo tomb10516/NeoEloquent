@@ -343,6 +343,7 @@ class Builder extends IlluminateBuilder
      * @param array                     $columns
      *
      * @return array
+     *
      * @deprecated 2.0 using getNodeAttributes instead
      */
     public function getProperties(array $resultColumns, Row $row)
@@ -511,7 +512,7 @@ class Builder extends IlluminateBuilder
     {
         $paginator = $this->query->getConnection()->getPaginator();
         $page = $paginator->getCurrentPage();
-        $perPage = $perPage ? : $this->model->getPerPage();
+        $perPage = $perPage ?: $this->model->getPerPage();
         $this->query->skip(($page - 1) * $perPage)->take($perPage + 1);
 
         return new Paginator($this->get($columns), $perPage, $page, [
@@ -729,8 +730,7 @@ class Builder extends IlluminateBuilder
              */
             $traits = class_uses($relation->getRelated());
             if (in_array("Vinelab\NeoEloquent\Eloquent\SoftDeletes", $traits)) {
-                $this->carry([$prefix . "." . $relation->getRelated()->getQualifiedDeletedAtColumn() => 
-                    $prefix . "_" . $relation->getRelated()->getQualifiedDeletedAtColumn()]);
+                $this->carry([$prefix.'.'.$relation->getRelated()->getQualifiedDeletedAtColumn() => $prefix.'_'.$relation->getRelated()->getQualifiedDeletedAtColumn()]);
             }
 
             $countPart = $prefix.'_count';

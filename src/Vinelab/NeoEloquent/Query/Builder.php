@@ -414,7 +414,7 @@ class Builder extends IlluminateQueryBuilder
 
     public function WhereSoftDeleted($placeholderType, $nodePlaceholder, $column, $boolean = 'and', $not = false)
     {
-//        $type = $not ? 'NotNull' : 'Null';
+        //        $type = $not ? 'NotNull' : 'Null';
         $type = 'SoftDeleted';
         $operator = $not ? 'IS NOT NULL' : 'IS NULL';
         $placeholder = $nodePlaceholder;
@@ -422,6 +422,7 @@ class Builder extends IlluminateQueryBuilder
 //        $binding = $this->prepareBindingColumn($column);
         $binding = null;
         $this->wheres[] = compact('type', 'placeholderType', 'placeholder', 'column', 'operator', 'boolean', 'binding');
+
         return $this;
     }
 

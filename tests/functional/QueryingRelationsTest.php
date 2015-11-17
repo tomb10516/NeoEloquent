@@ -11,7 +11,6 @@ use Vinelab\NeoEloquent\Eloquent\SoftDeletes;
 
 class QueryingRelationsTest extends TestCase
 {
-
     public function tearDown()
     {
         M::close();
@@ -78,9 +77,9 @@ class QueryingRelationsTest extends TestCase
         }
         $allPosts = Post::get();
         $this->assertEquals(4, count($allPosts));
-        
+
         $comment->delete();
-        
+
         $posts = Post::has('commentDels')->get();
         $this->assertEquals(2, count($posts));
         $expectedHasComments = [$postWithTwoComments->id, $postWithTenComments->id];
@@ -97,7 +96,7 @@ class QueryingRelationsTest extends TestCase
         $this->assertEquals(1, count($postWithTen));
         $this->assertEquals($postWithTenComments->toArray(), $postWithTen->first()->toArray());
     }
-    
+
     public function testQueryingWhereHasOne()
     {
         $mrAdmin = User::create(['name' => 'Rundala']);
@@ -824,21 +823,18 @@ class Tag extends Model
 {
     protected $label = 'Tag';
     protected $fillable = ['title'];
-
 }
 
 class Photo extends Model
 {
     protected $label = 'Photo';
     protected $fillable = ['url', 'caption', 'metadata'];
-
 }
 
 class Video extends Model
 {
     protected $label = 'Video';
     protected $fillable = ['title', 'description', 'stream_url', 'thumbnail'];
-
 }
 
 class Comment extends Model
@@ -854,7 +850,6 @@ class Comment extends Model
 
 class CommentDel extends Model
 {
-
     use SoftDeletes;
     protected $dates = ['deleted_at'];
     protected $label = 'CommentDel';

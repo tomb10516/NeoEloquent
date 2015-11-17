@@ -316,15 +316,16 @@ class CypherGrammar extends Grammar
     protected function WHERESoftDeleted(Builder $query, $where)
     {
         if (empty($query->with)) {
-            $cypher = $where['placeholder'].".".$where['column'].' '.$where['operator'].' ';
+            $cypher = $where['placeholder'].'.'.$where['column'].' '.$where['operator'].' ';
         } else {
-//            if ($where['placeholderType'] === "node") {
+            //            if ($where['placeholderType'] === "node") {
 //                $cypher = $where['placeholder'].".".$where['column'].' '.$where['operator'].' ';
 //            } else {
 //                $cypher = $where['column'].' '.$where['operator'].' ';
 //            }
-            $cypher = $where['placeholder']."_".$where['column'].' '.$where['operator'].' ';
+            $cypher = $where['placeholder'].'_'.$where['column'].' '.$where['operator'].' ';
         }
+
         return $cypher;
     }
 
