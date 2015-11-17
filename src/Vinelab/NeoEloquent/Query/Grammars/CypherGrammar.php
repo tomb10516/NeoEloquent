@@ -318,11 +318,12 @@ class CypherGrammar extends Grammar
         if (empty($query->with)) {
             $cypher = $where['placeholder'].".".$where['column'].' '.$where['operator'].' ';
         } else {
-            if ($where['placeholderType'] === "node") {
-                $cypher = $where['placeholder'].".".$where['column'].' '.$where['operator'].' ';
-            } else {
-                $cypher = $where['column'].' '.$where['operator'].' ';
-            }
+//            if ($where['placeholderType'] === "node") {
+//                $cypher = $where['placeholder'].".".$where['column'].' '.$where['operator'].' ';
+//            } else {
+//                $cypher = $where['column'].' '.$where['operator'].' ';
+//            }
+            $cypher = $where['placeholder']."_".$where['column'].' '.$where['operator'].' ';
         }
         return $cypher;
     }

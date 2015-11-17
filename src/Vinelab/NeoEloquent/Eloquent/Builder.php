@@ -727,6 +727,12 @@ class Builder extends IlluminateBuilder
              *
              * Which is the result of Post::has('comments', '>=', 10)->get();
              */
+            $traits = class_uses($relation->getRelated());
+            if (in_array("Vinelab\NeoEloquent\Eloquent\SoftDeletes", $traits)) {
+                $this->carry([$prefix . "." . $relation->getRelated()->getQualifiedDeletedAtColumn() => 
+                    $prefix . "_" . $relation->getRelated()->getQualifiedDeletedAtColumn()]);
+            }
+
             $countPart = $prefix.'_count';
             $this->carry([$relation->getParentNode(), "count($prefix)" => $countPart]);
             $this->whereCarried($countPart, $operator, $count);
@@ -900,28 +906,31 @@ class Builder extends IlluminateBuilder
      */
     protected function prefixAndMerge(Builder $query, $prefix)
     {
-        foreach ($query->getQuery()->wheres as $where) {
-            if ($where['type'] === 'SoftDeleted') {
-
-                $query->getQuery()->with[$prefix.$where['placeholder']] = "foo";
-            }
-        }
-
         $this->prefixWheres($query, $prefix);
-
-
-
-        foreach ($query->getQuery()->with as $key => $value) {
-//            $query->getQuery()->with[$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
-//            $query->getQuery()->with[$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
-            unset($query->getQuery()->with[$key]);
-            $query->getQuery()->with[$prefix.".".$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
-        }
-
-        $this->query->mergeWith($query->getQuery()->with, $query->getQuery()->getBindings());
-
-
         $this->query->mergeWheres($query->getQuery()->wheres, $query->getQuery()->getBindings());
+
+//        foreach ($query->getQuery()->wheres as $where) {
+//            if ($where['type'] === 'SoftDeleted') {
+//
+//                $query->getQuery()->with[$prefix.$where['placeholder']] = "foo";
+//            }
+//        }
+//
+//        $this->prefixWheres($query, $prefix);
+//
+//
+//
+//        foreach ($query->getQuery()->with as $key => $value) {
+////            $query->getQuery()->with[$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
+////            $query->getQuery()->with[$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
+//            unset($query->getQuery()->with[$key]);
+//            $query->getQuery()->with[$prefix.".".$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
+//        }
+//
+//        $this->query->mergeWith($query->getQuery()->with, $query->getQuery()->getBindings());
+//
+//
+//        $this->query->mergeWheres($query->getQuery()->wheres, $query->getQuery()->getBindings());
     }
 
     /**
@@ -937,7 +946,7 @@ class Builder extends IlluminateBuilder
                 if ($where['type'] === 'SoftDeleted') {
                     $where['placeholderType'] = 'Relation'; // because relation prefix might not be node label
                     $column = $where['column'];
-                    $where['column'] = ($this->isId($column)) ? $column : $prefix.'_'.$column;
+//                    $where['column'] = ($this->isId($column)) ? $column : $prefix.'_'.$column;
                 } else {
                     $column = $where['column'];
                     $where['column'] = ($this->isId($column)) ? $column : $prefix.'.'.$column;
