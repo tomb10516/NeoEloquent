@@ -715,8 +715,6 @@ class Builder extends IlluminateBuilder
          */
         $prefix = $relation->getRelatedNode();
 
-        // BOOKMARK - prefix soft delete here?
-
         if (!$callback) {
             /*
              * The Cypher we're trying to build here would look like this:
@@ -728,8 +726,7 @@ class Builder extends IlluminateBuilder
              *
              * Which is the result of Post::has('comments', '>=', 10)->get();
              */
-            $traits = class_uses($relation->getRelated());
-            if (in_array("Vinelab\NeoEloquent\Eloquent\SoftDeletes", $traits)) {
+            if (in_array("Vinelab\NeoEloquent\Eloquent\SoftDeletes", class_uses($relation->getRelated()))) {
                 $this->carry([$prefix.'.'.$relation->getRelated()->getQualifiedDeletedAtColumn() => $prefix.'_'.$relation->getRelated()->getQualifiedDeletedAtColumn()]);
             }
 
@@ -908,29 +905,6 @@ class Builder extends IlluminateBuilder
     {
         $this->prefixWheres($query, $prefix);
         $this->query->mergeWheres($query->getQuery()->wheres, $query->getQuery()->getBindings());
-
-//        foreach ($query->getQuery()->wheres as $where) {
-//            if ($where['type'] === 'SoftDeleted') {
-//
-//                $query->getQuery()->with[$prefix.$where['placeholder']] = "foo";
-//            }
-//        }
-//
-//        $this->prefixWheres($query, $prefix);
-//
-//
-//
-//        foreach ($query->getQuery()->with as $key => $value) {
-////            $query->getQuery()->with[$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
-////            $query->getQuery()->with[$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
-//            unset($query->getQuery()->with[$key]);
-//            $query->getQuery()->with[$prefix.".".$key] = ($this->isId($value)) ? $value : $prefix.'_'.$value;
-//        }
-//
-//        $this->query->mergeWith($query->getQuery()->with, $query->getQuery()->getBindings());
-//
-//
-//        $this->query->mergeWheres($query->getQuery()->wheres, $query->getQuery()->getBindings());
     }
 
     /**
@@ -946,7 +920,6 @@ class Builder extends IlluminateBuilder
                 if ($where['type'] === 'SoftDeleted') {
                     $where['placeholderType'] = 'Relation'; // because relation prefix might not be node label
                     $column = $where['column'];
-//                    $where['column'] = ($this->isId($column)) ? $column : $prefix.'_'.$column;
                 } else {
                     $column = $where['column'];
                     $where['column'] = ($this->isId($column)) ? $column : $prefix.'.'.$column;

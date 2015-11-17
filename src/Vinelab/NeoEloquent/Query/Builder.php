@@ -414,12 +414,10 @@ class Builder extends IlluminateQueryBuilder
 
     public function WhereSoftDeleted($placeholderType, $nodePlaceholder, $column, $boolean = 'and', $not = false)
     {
-        //        $type = $not ? 'NotNull' : 'Null';
         $type = 'SoftDeleted';
         $operator = $not ? 'IS NOT NULL' : 'IS NULL';
         $placeholder = $nodePlaceholder;
         $placeholderType = $placeholderType;
-//        $binding = $this->prepareBindingColumn($column);
         $binding = null;
         $this->wheres[] = compact('type', 'placeholderType', 'placeholder', 'column', 'operator', 'boolean', 'binding');
 
@@ -817,7 +815,6 @@ class Builder extends IlluminateQueryBuilder
     public function mergeWith($with, $bindings)
     {
         $this->with = array_merge((array) $this->with, (array) $with);
-//        $this->bindings['where'] = array_merge_recursive($this->bindings['where'], (array) $bindings);
     }
 
     public function wrap($property)
