@@ -368,7 +368,7 @@ abstract class HasOneOrMany extends IlluminateHasOneOrMany implements RelationIn
      */
     public function detach($id = array(), $touch = true)
     {
-        if (!$id instanceof Model and ! $id instanceof Collection) {
+        if (!$id instanceof Model and !$id instanceof Collection) {
             $id = $this->modelsFromIds($id);
         } elseif (!is_array($id)) {
             $id = [$id];

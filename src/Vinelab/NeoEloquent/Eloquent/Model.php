@@ -167,7 +167,7 @@ abstract class Model extends IlluminateModel
         // actually be responsible for retrieving and hydrating every relations.
         $query = $instance->newQuery();
 
-        $otherKey = $otherKey ? : $instance->getKeyName();
+        $otherKey = $otherKey ?: $instance->getKeyName();
 
         return new BelongsTo($query, $this, $foreignKey, $otherKey, $relation);
     }
@@ -207,7 +207,7 @@ abstract class Model extends IlluminateModel
         // actually be responsible for retrieving and hydrating every relations.
         $query = $instance->newQuery();
 
-        $otherKey = $otherKey ? : $instance->getKeyName();
+        $otherKey = $otherKey ?: $instance->getKeyName();
 
         return new HasOne($query, $this, $foreignKey, $otherKey, $relation);
     }
@@ -234,18 +234,18 @@ abstract class Model extends IlluminateModel
         }
 
         // the $type should be the UPPERCASE of the relation not the foreign key.
-        $type = $type ? : mb_strtoupper($relation);
+        $type = $type ?: mb_strtoupper($relation);
 
         $instance = new $related();
 
-        $key = $key ? : $this->getKeyName();
+        $key = $key ?: $this->getKeyName();
 
         $query = $instance->newQuery();
 
         if (isset($query->getQuery()->wheres)) {
-            for ($i = 0; $i < count($query->getQuery()->wheres); $i++) {
+            for ($i = 0; $i < count($query->getQuery()->wheres); ++$i) {
                 if ($query->getQuery()->wheres[$i]['type'] == 'SoftDeleted') {
-                    $query->getQuery()->wheres[$i]['placeholderType'] = "relation";
+                    $query->getQuery()->wheres[$i]['placeholderType'] = 'relation';
                     $query->getQuery()->wheres[$i]['placeholder'] = $relation;
                 }
             }
@@ -284,7 +284,7 @@ abstract class Model extends IlluminateModel
         }
 
         // If no $key was provided we will consider it the key name of this model.
-        $key = $key ? : $this->getKeyName();
+        $key = $key ?: $this->getKeyName();
 
         // If no relationship type was provided, we can use the previously traced back
         // $relation being the function name that called this method and using it in its
@@ -328,7 +328,7 @@ abstract class Model extends IlluminateModel
         }
 
         // If no $key was provided we will consider it the key name of this model.
-        $key = $key ? : $this->getKeyName();
+        $key = $key ?: $this->getKeyName();
 
         // If no relationship type was provided, we can use the previously traced back
         // $relation being the function name that called this method and using it in its
@@ -378,7 +378,7 @@ abstract class Model extends IlluminateModel
         }
 
         // If no $key was provided we will consider it the key name of this model.
-        $key = $key ? : $this->getKeyName();
+        $key = $key ?: $this->getKeyName();
 
         // If no relationship type was provided, we can use the previously traced back
         // $relation being the function name that called this method and using it in its
@@ -420,7 +420,7 @@ abstract class Model extends IlluminateModel
         }
 
         // If no $key was provided we will consider it the key name of this model.
-        $key = $key ? : $this->getKeyName();
+        $key = $key ?: $this->getKeyName();
 
         // If no relationship type was provided, we can use the previously traced back
         // $relation being the function name that called this method and using it in its
@@ -601,7 +601,7 @@ abstract class Model extends IlluminateModel
      */
     protected function getMorphs($name, $type, $id)
     {
-        $type = $type ? : $name.'_type';
+        $type = $type ?: $name.'_type';
 
         $id = $this->getkeyname();
 

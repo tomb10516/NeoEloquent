@@ -431,22 +431,10 @@ class Builder extends IlluminateBuilder
         $direction = strtolower($direction) == 'asc' ? 'asc' : 'desc';
 
         $orderBy = [
-            'direction' => $direction
+            'direction' => $direction,
         ];
 
         $this->has($relation, $operator, $count, $boolean, $callback, $orderBy);
-//        $wheres = $this->getQuery()->wheres;
-//        // the count column should always be the top of the stack because no other
-//        // where statements should be processed between the call to has() and here
-//        $column = $wheres[count($wheres) - 1]['column'];
-//        // "raw" tells later steps of compilation that we don't want this column prefixed or modified
-//        //  in any other way, we have given this column the exact name we want in the 
-//        //  WITH and ORDER BY clauses
-//        $raw = true;
-//
-//        // adds to the $orders[] table what is needed to construct the clause in the form of
-//        // ORDER BY $column 
-//        $this->getQuery()->orders[] = compact('column', 'direction', 'raw');
 
         return $this;
     }
@@ -560,7 +548,7 @@ class Builder extends IlluminateBuilder
     {
         $paginator = $this->query->getConnection()->getPaginator();
         $page = $paginator->getCurrentPage();
-        $perPage = $perPage ? : $this->model->getPerPage();
+        $perPage = $perPage ?: $this->model->getPerPage();
         $this->query->skip(($page - 1) * $perPage)->take($perPage + 1);
 
         return new Paginator($this->get($columns), $perPage, $page, [
@@ -782,7 +770,7 @@ class Builder extends IlluminateBuilder
             $this->carry([$relation->getParentNode(), "count($prefix)" => $countPart]);
             $this->whereCarried($countPart, $operator, $count);
             if (isset($orderBy)) {
-                $column = $countPart ;
+                $column = $countPart;
                 $direction = $orderBy['direction'];
                 $raw = true;
                 $this->getQuery()->orders[] = compact('column', 'direction', 'raw');

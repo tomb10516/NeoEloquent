@@ -11,7 +11,6 @@ use Vinelab\NeoEloquent\Eloquent\SoftDeletes;
 
 class QueryingRelationsTest extends TestCase
 {
-
     public function tearDown()
     {
         M::close();
@@ -804,7 +803,7 @@ class QueryingRelationsTest extends TestCase
 
     public function testFilterRelationPropertiesBinaryOps()
     {
-        $this->markTestSkipped("relation filtering not yet implemented");
+        $this->markTestSkipped('relation filtering not yet implemented');
 
         $organization = Organization::create(['name' => 'cOrg']);
         for ($i = 0; $i < 4; ++$i) {
@@ -828,7 +827,7 @@ class QueryingRelationsTest extends TestCase
 
     public function testFilterRelationPropertiesWithNullValue()
     {
-        $this->markTestSkipped("relation filtering not yet implemented");
+        $this->markTestSkipped('relation filtering not yet implemented');
 
         $organization = Organization::create(['name' => 'cOrg']);
         for ($i = 0; $i < 4; ++$i) {
@@ -859,7 +858,7 @@ class QueryingRelationsTest extends TestCase
      */
     public function testFilterRelationPropertiesNoRelation()
     {
-        $this->markTestSkipped("relation filtering not yet implemented");
+        $this->markTestSkipped('relation filtering not yet implemented');
 
         $organization = Organization::create(['name' => 'cOrg']);
         $activeMembers = $organization->whereRel('status', '=', 'active')->get();
@@ -1039,21 +1038,18 @@ class Tag extends Model
 {
     protected $label = 'Tag';
     protected $fillable = ['title'];
-
 }
 
 class Photo extends Model
 {
     protected $label = 'Photo';
     protected $fillable = ['url', 'caption', 'metadata'];
-
 }
 
 class Video extends Model
 {
     protected $label = 'Video';
     protected $fillable = ['title', 'description', 'stream_url', 'thumbnail'];
-
 }
 
 class Comment extends Model
@@ -1069,7 +1065,6 @@ class Comment extends Model
 
 class CommentDel extends Model
 {
-
     use SoftDeletes;
     protected $dates = ['deleted_at'];
     protected $label = 'CommentDel';
