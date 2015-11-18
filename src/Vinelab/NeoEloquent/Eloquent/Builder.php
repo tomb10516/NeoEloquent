@@ -918,7 +918,7 @@ class Builder extends IlluminateBuilder
         if (is_array($query->getQuery()->wheres)) {
             $query->getQuery()->wheres = array_map(function ($where) use ($prefix) {
                 if ($where['type'] === 'SoftDeleted') {
-                    $where['placeholderType'] = 'Relation'; // because relation prefix might not be node label
+                    $where['placeholderType'] = 'relation'; // because relation prefix might not be node label
                     $column = $where['column'];
                 } else {
                     $column = $where['column'];

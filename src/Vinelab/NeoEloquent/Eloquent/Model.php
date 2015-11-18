@@ -152,6 +152,7 @@ abstract class Model extends IlluminateModel
 
             $relation = $caller['function'];
         }
+        $relation = strtolower($relation);
 
         // If no foreign key was supplied, we can use a backtrace to guess the proper
         // foreign key name by using the name of the calling class, which
@@ -166,6 +167,8 @@ abstract class Model extends IlluminateModel
         // for the related models and returns the relationship instance which will
         // actually be responsible for retrieving and hydrating every relations.
         $query = $instance->newQuery();
+
+        $this->setSoftDeletePlaceholderToRelation($query, $relation);
 
         $otherKey = $otherKey ?: $instance->getKeyName();
 
@@ -192,6 +195,7 @@ abstract class Model extends IlluminateModel
 
             $relation = $caller['function'];
         }
+        $relation = strtolower($relation);
 
         // If no foreign key was supplied, we can use a backtrace to guess the proper
         // foreign key name by using the name of the calling class, which
@@ -206,6 +210,8 @@ abstract class Model extends IlluminateModel
         // for the related models and returns the relationship instance which will
         // actually be responsible for retrieving and hydrating every relations.
         $query = $instance->newQuery();
+
+        $this->setSoftDeletePlaceholderToRelation($query, $relation);
 
         $otherKey = $otherKey ?: $instance->getKeyName();
 
@@ -232,6 +238,7 @@ abstract class Model extends IlluminateModel
 
             $relation = $caller['function'];
         }
+        $relation = strtolower($relation);
 
         // the $type should be the UPPERCASE of the relation not the foreign key.
         $type = $type ?: mb_strtoupper($relation);
@@ -240,7 +247,11 @@ abstract class Model extends IlluminateModel
 
         $key = $key ?: $this->getKeyName();
 
-        return new HasMany($instance->newQuery(), $this, $type, $key, $relation);
+        $query = $instance->newQuery();
+
+        $this->setSoftDeletePlaceholderToRelation($query, $relation);
+
+        return new HasMany($query, $this, $type, $key, $relation);
     }
 
     /**
@@ -271,6 +282,7 @@ abstract class Model extends IlluminateModel
 
             $relation = $caller['function'];
         }
+        $relation = strtolower($relation);
 
         // If no $key was provided we will consider it the key name of this model.
         $key = $key ?: $this->getKeyName();
@@ -288,6 +300,8 @@ abstract class Model extends IlluminateModel
         // the relationship instances for the relation. The relations will set
         // appropriate query constraint and entirely manages the hydrations.
         $query = $instance->newQuery();
+
+        $this->setSoftDeletePlaceholderToRelation($query, $relation);
 
         return new BelongsToMany($query, $this, $type, $key, $relation);
     }
@@ -424,6 +438,8 @@ abstract class Model extends IlluminateModel
         // the relationship instances for the relation. The relations will set
         // appropriate query constraint and entirely manages the hydrations.
         $query = $instance->newQuery();
+
+        $this->setSoftDeletePlaceholderToRelation($query, $relation);
 
         return new MorphedByOne($query, $this, $type, $key, $relation);
     }
@@ -578,6 +594,7 @@ abstract class Model extends IlluminateModel
 
         return $created;
     }
+
     /**
      * Get the polymorphic relationship columns.
      *
@@ -633,33 +650,33 @@ abstract class Model extends IlluminateModel
 
         return $dirty;
     }
-
     /*
      * Adds more labels
      * @param $labels array of strings containing labels to be added
      * @return bull true if success, false if failure
      */
+
     public function addLabels($labels)
     {
         return $this->updateLabels($labels, 'add');
     }
-
     /*
      * Drops labels
      * @param $labels array of strings containing labels to be dropped
      * @return bull true if success, false if failure
      */
+
     public function dropLabels($labels)
     {
         return $this->updateLabels($labels, 'drop');
     }
-
     /*
      * Adds or Drops labels
      * @param $labels array of strings containing labels to be dropped
      * @param $operation string can be 'add' or 'drop'
      * @return bull true if success, false if failure
      */
+
     public function updateLabels($labels, $operation = 'add')
     {
         $query = $this->newQueryWithoutScopes();
@@ -689,6 +706,25 @@ abstract class Model extends IlluminateModel
             $this->fireModelEvent('updated', false);
         } else {
             return false;
+        }
+    }
+
+    /**
+     *   When a MATCH is going to be on relation, the placeholder won't be the one assigned by SoftDeletingScope
+     *   we must change it from being node based to relation based.
+     * 
+     * @param type $query
+     * @param type $relation
+     */
+    protected function setSoftDeletePlaceholderToRelation($query, $relation)
+    {
+        if (isset($query->getQuery()->wheres)) {
+            for ($i = 0; $i < count($query->getQuery()->wheres); ++$i) {
+                if ($query->getQuery()->wheres[$i]['type'] == 'SoftDeleted') {
+                    $query->getQuery()->wheres[$i]['placeholderType'] = 'relation';
+                    $query->getQuery()->wheres[$i]['placeholder'] = $relation;
+                }
+            }
         }
     }
 }
