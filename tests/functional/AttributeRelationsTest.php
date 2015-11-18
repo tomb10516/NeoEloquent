@@ -19,6 +19,21 @@ class AttributeRelationsTest extends TestCase
         parent::tearDown();
     }
 
+    public function testWhereEdgeIdWithNoOperator()
+    {
+        $alice = new User(['name' => 'Alice']);
+        $alice->save();
+        $club = new Organization(['name' => 'NeoEloquent Devs']);
+        $alice->orgs()->save($club);
+
+        $edge = $alice->orgs()->edge($club);
+
+        $edgeIdQuery = $club->members()->whereRel('id', $edge->id);
+        $edgeLoaded = $edgeIdQuery->get();
+
+//        $this->assertEquals($this->ab->toArray(), $u->toArray());
+    }
+
     public function testSimpleEdgeAttributeQuery()
     {
         $alice = new User(['name' => 'Alice']);

@@ -317,15 +317,35 @@ class Builder extends IlluminateQueryBuilder
     public function whereRel($column, $operator = null, $value = null, $boolean = 'and')
     {
         $type = 'Relation';
-        
+
+        $myRelMatch = null;
+
+        // I beleive that the compilation in CypherGrammar assumes there is only one relationship match
+        // I don't yet know how brittle that is
+        foreach ($this->matches as $match) {
+            if ($match['type'] = 'Relation') {
+                $myRelMatch = $match;
+            }
+        }
+
+        $relationship = $myRelMatch['relationship'];
+        $relatedNode = $myRelMatch['related']['node'];
+
+        $relationshipVar = "rel_".mb_strtolower($relationship).'_'.$relatedNode;
+
+//        if ($column == 'id') {
+//            $column = 'id('.$relationshipVar.')';
+//            $value = intval($value);
+//        }
+
         $binding = $this->prepareBindingColumn($column);
-        
+
         $this->wheres[] = compact('type', 'binding', 'column', 'operator', 'value', 'boolean');
-        
+
         $property = $this->wrap($binding);
-        
+
         $this->addBinding([$property => $value], 'where');
-        
+
         return $this;
     }
 

@@ -342,7 +342,11 @@ class CypherGrammar extends Grammar
         $relationshipVar = "rel_".mb_strtolower($relationship).'_'.$related['node'];
 //        $relationshipVar = $this->prepareRelationVar($relationship, $related['node']);
 
-        return $relationshipVar.'.'.$where['column'].' '.$where['operator'].' '.$value;
+        if ($where['column'] == 'id') {
+            return 'id('.$relationshipVar.')';
+        } else {
+            return $relationshipVar.'.'.$where['column'].' '.$where['operator'].' '.$value;
+        }
     }
 
     /**
