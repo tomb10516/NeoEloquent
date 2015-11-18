@@ -125,9 +125,13 @@ trait SoftDeletes
     {
         $instance = new static();
 
+        $query = $instance->newQueryWithoutScope(new SoftDeletingScope());
+
+        $label = $instance->getTable();
+        $nodePlaceholder = $query->getQuery()->getGrammar()->modelAsNode($label);
         $column = $instance->getQualifiedDeletedAtColumn();
 
-        return $instance->newQueryWithoutScope(new SoftDeletingScope())->whereNotNull($column);
+        return $query->whereSoftDeleted('node', $nodePlaceholder, $column, 'and', true);
     }
 
     /**

@@ -2,16 +2,13 @@
 
 namespace Vinelab\NeoEloquent\Tests\Functional\AttributeRelations;
 
-use DateTime;
 use Mockery as M;
-use Carbon\Carbon;
 use Vinelab\NeoEloquent\Tests\TestCase;
 use Vinelab\NeoEloquent\Eloquent\Model;
 use Vinelab\NeoEloquent\Eloquent\SoftDeletes;
 
 class AttributeRelationsTest extends TestCase
 {
-
     public function tearDown()
     {
         M::close();
@@ -21,6 +18,7 @@ class AttributeRelationsTest extends TestCase
 
     public function testWhereEdgeIdWithNoOperator()
     {
+        $this->markTestSkipped('not yet implemented');
         $alice = new User(['name' => 'Alice']);
         $alice->save();
         $club = new Organization(['name' => 'NeoEloquent Devs']);
@@ -36,6 +34,7 @@ class AttributeRelationsTest extends TestCase
 
     public function testSimpleEdgeAttributeQuery()
     {
+        $this->markTestSkipped('not yet implemented');
         $alice = new User(['name' => 'Alice']);
         $alice->save();
         $bob = new User(['name' => 'Bob']);
@@ -65,6 +64,7 @@ class AttributeRelationsTest extends TestCase
 
     public function testEdgeAttributeQueryBinaryOps()
     {
+        $this->markTestSkipped('not yet implemented');
         $organization = Organization::create(['name' => 'NeoEloquent Devs']);
         for ($i = 0; $i < 4; ++$i) {
             $user = User::create(['name' => 'user'.$i]);
@@ -87,6 +87,7 @@ class AttributeRelationsTest extends TestCase
 
     public function testEdgeAttributeQueryWithNullValue()
     {
+        $this->markTestSkipped('not yet implemented');
         $organization = Organization::create(['name' => 'cOrg']);
         for ($i = 0; $i < 4; ++$i) {
             $user = User::create(['name' => 'user'.$i]);
@@ -114,7 +115,6 @@ class AttributeRelationsTest extends TestCase
 
 class User extends Model
 {
-
     use SoftDeletes;
     protected $dates = ['deleted_at'];
     protected $label = 'User';
@@ -128,7 +128,6 @@ class User extends Model
 
 class Organization extends Model
 {
-
     use SoftDeletes;
     protected $dates = ['deleted_at'];
     protected $label = 'Organization';

@@ -302,14 +302,15 @@ class Builder extends IlluminateQueryBuilder
     }
 
     /**
-     * Add a where clause for an edge property
+     * Add a where clause for an edge property.
      * 
      * Note that nesting is not supported
      *
-     * @param  string  $column
-     * @param  string  $operator
-     * @param  mixed   $value
-     * @param  string  $boolean
+     * @param string $column
+     * @param string $operator
+     * @param mixed  $value
+     * @param string $boolean
+     *
      * @return \Illuminate\Database\Query\Builder|static
      *
      * @throws \InvalidArgumentException
@@ -331,7 +332,7 @@ class Builder extends IlluminateQueryBuilder
         $relationship = $myRelMatch['relationship'];
         $relatedNode = $myRelMatch['related']['node'];
 
-        $relationshipVar = "rel_".mb_strtolower($relationship).'_'.$relatedNode;
+        $relationshipVar = 'rel_'.mb_strtolower($relationship).'_'.$relatedNode;
 
 //        if ($column == 'id') {
 //            $column = 'id('.$relationshipVar.')';

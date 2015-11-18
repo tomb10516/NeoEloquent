@@ -153,6 +153,24 @@ class QueryingRelationsTest extends TestCase
         }
     }
 
+    // note: this test really belongs in a test suite dedicatd to testing soft deletes, and i (tomb) will move it later
+    public function testOnlyTrashed()
+    {
+        $postWithTenComments = Post::create(['title' => 'Up yours posts, got 10 here']);
+        // add ten comments to $postWithTenComments
+        for ($i = 0; $i < 10; ++$i) {
+            $comment = CommentDel::create(['text' => "Comment $i"]);
+            $postWithTenComments->commentDels()->save($comment);
+            if ($i < 5) {
+                $comment->delete();
+            }
+        }
+        $undeletedComments = $postWithTenComments->commentDels()->get();
+        $this->assertEquals(5, count($undeletedComments));
+        $deletedComments = $postWithTenComments->commentDels()->onlyTrashed()->get();
+        $this->assertEquals(5, count($undeletedComments));
+    }
+
     public function testQueryingHasCountDelAfterDel()
     {
         $postNoComment = Post::create(['title' => 'I have no comments =(', 'body' => 'None!']);

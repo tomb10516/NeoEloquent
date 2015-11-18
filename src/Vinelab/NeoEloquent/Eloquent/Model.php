@@ -152,6 +152,7 @@ abstract class Model extends IlluminateModel
 
             $relation = $caller['function'];
         }
+        $relation = strtolower($relation);
 
         // If no foreign key was supplied, we can use a backtrace to guess the proper
         // foreign key name by using the name of the calling class, which
@@ -194,6 +195,7 @@ abstract class Model extends IlluminateModel
 
             $relation = $caller['function'];
         }
+        $relation = strtolower($relation);
 
         // If no foreign key was supplied, we can use a backtrace to guess the proper
         // foreign key name by using the name of the calling class, which
@@ -236,6 +238,7 @@ abstract class Model extends IlluminateModel
 
             $relation = $caller['function'];
         }
+        $relation = strtolower($relation);
 
         // the $type should be the UPPERCASE of the relation not the foreign key.
         $type = $type ?: mb_strtoupper($relation);
@@ -279,6 +282,7 @@ abstract class Model extends IlluminateModel
 
             $relation = $caller['function'];
         }
+        $relation = strtolower($relation);
 
         // If no $key was provided we will consider it the key name of this model.
         $key = $key ?: $this->getKeyName();
@@ -325,6 +329,7 @@ abstract class Model extends IlluminateModel
 
             $relation = $caller['function'];
         }
+        $relation = strtolower($relation);
 
         // If no $key was provided we will consider it the key name of this model.
         $key = $key ?: $this->getKeyName();
@@ -430,6 +435,7 @@ abstract class Model extends IlluminateModel
 
             $relation = $caller['function'];
         }
+        $relation = strtolower($relation);
 
         // If no $key was provided we will consider it the key name of this model.
         $key = $key ?: $this->getKeyName();

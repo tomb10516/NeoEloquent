@@ -315,7 +315,6 @@ class CypherGrammar extends Grammar
 
     protected function whereRelation(Builder $query, $where)
     {
-
         $value = $this->parameter($where);
 
         $match = null;
@@ -327,19 +326,19 @@ class CypherGrammar extends Grammar
                     $match = $m;
                 } else {
                     throw new NeoEloquentException(
-                    "not yet implemented - whereRelation does not yet support querries with multiple relations");
+                    'not yet implemented - whereRelation does not yet support querries with multiple relations');
                 }
             }
         }
         if (!$match) {
             throw new NeoEloquentException(
-            "whereRelation requires a relation in the query");
+            'whereRelation requires a relation in the query');
         }
 
         $related = $match['related'];
         $relationship = $match['relationship'];
         // Get the relationship ready for query
-        $relationshipVar = "rel_".mb_strtolower($relationship).'_'.$related['node'];
+        $relationshipVar = 'rel_'.mb_strtolower($relationship).'_'.$related['node'];
 //        $relationshipVar = $this->prepareRelationVar($relationship, $related['node']);
 
         if ($where['column'] == 'id') {
